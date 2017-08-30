@@ -60,8 +60,8 @@ MODULE gfcl_list_module
      TYPE(node_T), POINTER     :: p_next => NULL()
      TYPE(node_T), POINTER     :: p_prev => NULL()
 
-   CONTAINS
-     FINAL :: node_finalize
+!   CONTAINS
+!     FINAL :: node_final___
   END TYPE node_T
 
   !=== linked list ===================================================
@@ -100,15 +100,15 @@ MODULE gfcl_list_module
      TYPE(node_T), POINTER :: p_node => NULL()
      
    CONTAINS
-     PROCEDURE       :: initial_void => list_iterator_initial
-     PROCEDURE       :: initial_copy => list_iterator_initial_copy
+     PROCEDURE :: initial_void__ => iterator_initial_void___
+     PROCEDURE :: initial_copy__ => iterator_initial_copy___
 
-     PROCEDURE         :: equal    => list_iterator_eq
-     PROCEDURE         :: notequal => list_iterator_neq
-     PROCEDURE, PUBLIC :: next     => list_iterator_next
-     PROCEDURE, PUBLIC :: prev     => list_iterator_prev
+     PROCEDURE :: equal__    => iterator_equal___
+     PROCEDURE :: notequal__ => iterator_notequal___
+     PROCEDURE :: next__     => iterator_next___
+     PROCEDURE :: prev__     => iterator_prev___
      
-     GENERIC, PUBLIC :: initial => initial_void, initial_copy
+     GENERIC, PUBLIC :: initial => initial_void__, initial_copy__
   END TYPE gfcl_list_iterator
   
   !--- Interfaces ----------------------------------------------------               
@@ -226,10 +226,10 @@ CONTAINS
     END DO
   END SUBROUTINE node_reverse
 
-  SUBROUTINE node_finalize(t_node)
+  SUBROUTINE node_final___(t_node)
     TYPE(node_T), INTENT(inout) :: t_node
     IF (ALLOCATED(t_node%c_data)) DEALLOCATE(t_node%c_data)
-  END SUBROUTINE node_finalize
+  END SUBROUTINE node_final___
 
   !===================================================================
   !                         LIST ITERATOR
@@ -248,42 +248,42 @@ CONTAINS
   !===================================================================
 
   ! creates an empty iterator
-  SUBROUTINE list_iterator_initial(c_this)
+  SUBROUTINE iterator_initial_void___(c_this)
     ! --- Declaration of arguments -------------------------------------
     CLASS(gfcl_list_iterator), INTENT(inout) :: c_this
     NULLIFY(c_this%p_node)
-  END SUBROUTINE list_iterator_initial
+  END SUBROUTINE iterator_initial_void___
 
   ! creates a copy from an iterator
-  SUBROUTINE list_iterator_initial_copy(c_this,c_that)
+  SUBROUTINE iterator_initial_copy___(c_this,c_that)
     ! --- Declaration of arguments -------------------------------------
     CLASS(gfcl_list_iterator), INTENT(inout)         :: c_this
     CLASS(gfcl_list_iterator), INTENT(in)   , TARGET :: c_that
     c_this%p_node => c_that%p_node
-  END SUBROUTINE list_iterator_initial_copy
+  END SUBROUTINE iterator_initial_copy___
 
-  SUBROUTINE list_iterator_final(c_this)
+  SUBROUTINE iterator_final___(c_this)
     ! --- Declaration of arguments -------------------------------------
     CLASS(gfcl_list_iterator), INTENT(inout) :: c_this
     NULLIFY(c_this%p_node)
-  END SUBROUTINE list_iterator_final
+  END SUBROUTINE iterator_final___
 
-  ! list_iterator_next
-  SUBROUTINE list_iterator_next(c_this)
+  ! iterator_next
+  SUBROUTINE iterator_next___(c_this)
     ! --- Declaration of arguments -------------------------------------
     CLASS(gfcl_list_iterator), INTENT(inout) :: c_this
     c_this%p_node => c_this%p_node%p_next
-  END SUBROUTINE list_iterator_next
+  END SUBROUTINE iterator_next___
 
-  ! list_iterator_dec
-  SUBROUTINE list_iterator_prev(c_this)
+  ! iterator_dec
+  SUBROUTINE iterator_prev___(c_this)
     ! decrements the iterator it and returns it
     CLASS(gfcl_list_iterator), INTENT(inout) :: c_this
     c_this%p_node => c_this%p_node%p_prev
-  END SUBROUTINE  list_iterator_prev
+  END SUBROUTINE  iterator_prev___
 
-  ! list_iterator_eq
-  FUNCTION list_iterator_eq(c_this,c_that) RESULT(b)
+  ! iterator_eq
+  FUNCTION iterator_equal___(c_this,c_that) RESULT(b)
     ! returns true if it1 and it2 point to the same node
     CLASS(gfcl_list_iterator), INTENT(in) :: c_this
     CLASS(forward_iterator)  , INTENT(in) :: c_that
@@ -294,10 +294,10 @@ CONTAINS
     CLASS default
        b = .FALSE.
     END SELECT
-  END FUNCTION list_iterator_eq
+  END FUNCTION iterator_equal___
 
-  ! list_iterator_neq
-  FUNCTION list_iterator_neq(c_this,c_that) RESULT(b)
+  ! iterator_neq
+  FUNCTION iterator_notequal___(c_this,c_that) RESULT(b)
     ! returns true if it1 and it2 point to the same node
     CLASS(gfcl_list_iterator), INTENT(in) :: c_this
     CLASS(forward_iterator)  , INTENT(in) :: c_that
@@ -308,46 +308,46 @@ CONTAINS
     CLASS default
        b = .TRUE.
     END SELECT
-  END FUNCTION list_iterator_neq
+  END FUNCTION iterator_notequal___
 
-  ! list_iterator_assign
-  SUBROUTINE list_iterator_assign(t_this,t_that)
+  ! iterator_assign
+  SUBROUTINE iterator_assign(t_this,t_that)
     ! make t_this and t_that equal iterators
     TYPE(gfcl_list_iterator), intent(out) :: t_this
     TYPE(gfcl_list_iterator), intent(in)  :: t_that
     t_this%p_node => t_that%p_node
-  END SUBROUTINE list_iterator_assign
+  END SUBROUTINE iterator_assign
 
-  ! list_iterator_assign_node
-  SUBROUTINE list_iterator_assign_node(t_this,t_node)
+  ! iterator_assign_node
+  SUBROUTINE iterator_assign_node(t_this,t_node)
     TYPE(gfcl_list_iterator), INTENT(out) :: t_this
     TYPE(node_T), INTENT(in), TARGET :: t_node
     t_this%p_node => t_node
-  END SUBROUTINE list_iterator_assign_node
+  END SUBROUTINE iterator_assign_node
 
-  ! list_iterator_get_at
-  FUNCTION list_iterator_get_at(t_this) RESULT(VALUE)
+  ! iterator_get_at
+  FUNCTION iterator_get_at(t_this) RESULT(VALUE)
     TYPE(gfcl_list_iterator), INTENT(in) :: t_this
     CLASS(*)                , POINTER    :: value
     value => t_this%p_node%c_data
-  END FUNCTION list_iterator_get_at
+  END FUNCTION iterator_get_at
 
-  ! list_iterator_set_at
-  SUBROUTINE list_iterator_set_at(t_this,value)
+  ! iterator_set_at
+  SUBROUTINE iterator_set_at(t_this,value)
     TYPE(gfcl_list_iterator), INTENT(inout) :: t_this
     CLASS(*)                , INTENT(in)    :: value
     IF (ALLOCATED(t_this%p_node%c_data)) DEALLOCATE(t_this%p_node%c_data)
     ALLOCATE(t_this%p_node%c_data,source=value)
-  END SUBROUTINE list_iterator_set_at
+  END SUBROUTINE iterator_set_at
 
-  ! list_iterator_transfer
-  SUBROUTINE list_iterator_transfer(t_this,t_first,t_last)
+  ! iterator_transfer
+  SUBROUTINE iterator_transfer(t_this,t_first,t_last)
     TYPE(gfcl_list_iterator), INTENT(inout) :: t_this,t_first,t_last
     CALL list_node_transfer(t_this%p_node,t_first%p_node,t_last%p_node)
-  END SUBROUTINE list_iterator_transfer
+  END SUBROUTINE iterator_transfer
   
-  ! list_iterator_distance
-  FUNCTION list_iterator_distance(t_first,t_last) RESULT(n)
+  ! iterator_distance
+  FUNCTION iterator_distance(t_first,t_last) RESULT(n)
     TYPE(gfcl_list_iterator), INTENT(in) :: t_first,t_last
     INTEGER  :: n
     TYPE(gfcl_list_iterator) :: itr
@@ -357,7 +357,7 @@ CONTAINS
        n = n+1
        CALL itr%next()
     END DO
-  END FUNCTION list_iterator_distance
+  END FUNCTION iterator_distance
 
 
   

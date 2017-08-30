@@ -10,7 +10,7 @@ MODULE gfcl_iterators
      PROCEDURE(op1_fi), DEFERRED, PASS :: equal
      PROCEDURE(op1_fi), DEFERRED, PASS :: notequal
 
-     PROCEDURE(op2_fi), PUBLIC, DEFERRED :: next
+     PROCEDURE(op2_fi), PUBLIC, DEFERRED, PASS :: next
 
      GENERIC, PUBLIC :: OPERATOR(==) => equal
      GENERIC, PUBLIC :: OPERATOR(/=) => notequal
@@ -22,8 +22,10 @@ MODULE gfcl_iterators
 
   TYPE, EXTENDS(forward_iterator), ABSTRACT :: bidirectional_iterator
    CONTAINS
+!     PROCEDURE(op1_bi), DEFERRED, PASS(c_this) :: equal
+!     PROCEDURE(op1_bi), DEFERRED, PASS(c_this) :: notequal
      PRIVATE
-     PROCEDURE(op1_bi), PUBLIC, DEFERRED :: prev
+     PROCEDURE(op2_bi), PUBLIC, DEFERRED, PASS :: prev
   END TYPE bidirectional_iterator
 
   ! Random-access iterators are iterators that can be used to access
@@ -37,14 +39,14 @@ MODULE gfcl_iterators
 
    CONTAINS
      PRIVATE
-     PROCEDURE(op1_ri), DEFERRED, PASS(this) :: add_integer_post
-     PROCEDURE(op1_ri), DEFERRED, PASS(this) :: subtract_integer_post
-     PROCEDURE(op2_ri), DEFERRED, PASS(this) :: add_integer_pre
-     PROCEDURE(op3_ri), DEFERRED, PASS(this) :: subtract_iterator
-     PROCEDURE(op4_ri), DEFERRED, PASS(this) :: lt
-     PROCEDURE(op4_ri), DEFERRED, PASS(this) :: gt
-     PROCEDURE(op4_ri), DEFERRED, PASS(this) :: gte
-     PROCEDURE(op4_ri), DEFERRED, PASS(this) :: lte
+     PROCEDURE(op1_ri), DEFERRED, PASS(c_this) :: add_integer_post
+     PROCEDURE(op1_ri), DEFERRED, PASS(c_this) :: subtract_integer_post
+     PROCEDURE(op2_ri), DEFERRED, PASS(c_this) :: add_integer_pre
+     PROCEDURE(op3_ri), DEFERRED, PASS(c_this) :: subtract_iterator
+     PROCEDURE(op4_ri), DEFERRED, PASS(c_this) :: lt
+     PROCEDURE(op4_ri), DEFERRED, PASS(c_this) :: gt
+     PROCEDURE(op4_ri), DEFERRED, PASS(c_this) :: gte
+     PROCEDURE(op4_ri), DEFERRED, PASS(c_this) :: lte
 
      GENERIC, PUBLIC :: OPERATOR(+)  => add_integer_post, add_integer_pre
      GENERIC, PUBLIC :: OPERATOR(-)  => subtract_integer_post, subtract_iterator
@@ -57,45 +59,51 @@ MODULE gfcl_iterators
 
   ABSTRACT INTERFACE
 
-     FUNCTION op1_fi(this, that) RESULT(b)
+     FUNCTION op1_fi(c_this, c_that) RESULT(b)
        IMPORT :: forward_iterator
-       CLASS(forward_iterator), INTENT(in) :: this, that
+       CLASS(forward_iterator), INTENT(in) :: c_this, c_that
        LOGICAL                             :: b
      END FUNCTION op1_fi
 
-     SUBROUTINE op2_fi(this)
+     SUBROUTINE op2_fi(c_this)
        IMPORT :: forward_iterator
-       CLASS(forward_iterator), INTENT(inout)  :: this
+       CLASS(forward_iterator), INTENT(inout)  :: c_this
      END SUBROUTINE op2_fi
-     
-     SUBROUTINE op1_bi(this)
-       IMPORT :: bidirectional_iterator
-       CLASS(bidirectional_iterator), INTENT(inout)  :: this
-     END SUBROUTINE op1_bi
 
-     FUNCTION op1_ri(this, n) RESULT(itr)
+     FUNCTION op1_bi(c_this, c_that) RESULT(b)
+       IMPORT :: bidirectional_iterator
+       CLASS(bidirectional_iterator), INTENT(in) :: c_this, c_that
+       LOGICAL                             :: b
+     END FUNCTION op1_bi
+     
+     SUBROUTINE op2_bi(c_this)
+       IMPORT :: bidirectional_iterator
+       CLASS(bidirectional_iterator), INTENT(inout)  :: c_this
+     END SUBROUTINE op2_bi
+
+     FUNCTION op1_ri(c_this, n) RESULT(itr)
        IMPORT :: random_access_iterator
-       CLASS(random_access_iterator), INTENT(in)  :: this
+       CLASS(random_access_iterator), INTENT(in)  :: c_this
        INTEGER                      , INTENT(in)  :: n
        CLASS(random_access_iterator), ALLOCATABLE :: itr
      END FUNCTION op1_ri
 
-     FUNCTION op2_ri(n, this) RESULT(itr)
+     FUNCTION op2_ri(n, c_this) RESULT(itr)
        IMPORT :: random_access_iterator
-       CLASS(random_access_iterator), INTENT(in)  :: this
+       CLASS(random_access_iterator), INTENT(in)  :: c_this
        INTEGER                      , INTENT(in)  :: n
        CLASS(random_access_iterator), ALLOCATABLE :: itr
      END FUNCTION op2_ri
      
-     FUNCTION op3_ri(this, that) RESULT(itr)
+     FUNCTION op3_ri(c_this, c_that) RESULT(itr)
        IMPORT :: random_access_iterator
-       CLASS(random_access_iterator), INTENT(in)  :: this, that
+       CLASS(random_access_iterator), INTENT(in)  :: c_this, c_that
        CLASS(random_access_iterator), ALLOCATABLE :: itr
      END FUNCTION op3_ri
 
-     FUNCTION op4_ri(this, that) RESULT(b)
+     FUNCTION op4_ri(c_this, c_that) RESULT(b)
        IMPORT :: random_access_iterator
-       CLASS(random_access_iterator), INTENT(in) :: this, that
+       CLASS(random_access_iterator), INTENT(in) :: c_this, c_that
        LOGICAL                                   :: b
      END FUNCTION op4_ri
   END INTERFACE

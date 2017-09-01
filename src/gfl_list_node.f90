@@ -9,13 +9,15 @@ MODULE gfcl_list_node
   ! the previous and next node in the list.
   TYPE, PUBLIC :: ListNode
      !--- Component part
-     PRIVATE
      CLASS(*)       , ALLOCATABLE :: ta_data_
      CLASS(ListNode), POINTER     :: tp_next_ => NULL()
      CLASS(ListNode), POINTER     :: tp_prev_ => NULL()
 
    CONTAINS
      !--- Type-bound-procedure part
+     PROCEDURE, PRIVATE :: copy_data_ => copy_data__
+     PROCEDURE, PRIVATE :: copy_data_f_ => copy_data_f__
+
      PROCEDURE :: hook     => hook__
      PROCEDURE :: unhook   => unhook__
      PROCEDURE :: swap     => swap__
@@ -26,6 +28,8 @@ MODULE gfcl_list_node
      PROCEDURE :: get_prev => get_prev__
      PROCEDURE :: get_data => get_data__
      PROCEDURE :: set_data => set_data__
+
+     GENERIC   :: copy_data => copy_data_, copy_data_f_
 
      !     FINAL :: final___
   END TYPE ListNode
@@ -55,6 +59,30 @@ CONTAINS
     tp_prev%tp_next_ => tp_next
     tp_next%tp_prev_ => tp_prev
   END SUBROUTINE unhook__
+
+  SUBROUTINE copy_data__(t_node,t_data)
+    ! --- Declaration of arguments -------------------------------------
+    CLASS(ListNode), INTENT(inout) :: t_node
+    CLASS(*)       , INTENT(in)    :: t_data
+    ! --- Executable Code ----------------------------------------------
+    IF (ALLOCATED(t_node%ta_data_)) DEALLOCATE(t_node%ta_data_)
+    ALLOCATE(t_node%ta_data_,source=t_data)
+  END SUBROUTINE copy_data__
+
+  SUBROUTINE copy_data_f__(t_node,t_data,CopyElement)
+    ! --- Declaration of arguments -------------------------------------
+    CLASS(ListNode), INTENT(inout) :: t_node
+    CLASS(*)       , INTENT(in)    :: t_data
+    INTERFACE
+       SUBROUTINE CopyElement(t_data1,t_data2)
+         CLASS(*), INTENT(inout) :: t_data1
+         CLASS(*), INTENT(in)    :: t_data2
+       END SUBROUTINE CopyElement
+    END INTERFACE
+    ! --- Executable Code ----------------------------------------------
+    IF (.NOT.ALLOCATED(t_node%ta_data_)) ALLOCATE(t_node%ta_data_,mold=t_data)
+    CALL CopyElement(t_node%ta_data_,t_data)
+  END SUBROUTINE copy_data_f__
 
   SUBROUTINE copy_data(t_node1,t_node2)
     ! --- Declaration of arguments -------------------------------------

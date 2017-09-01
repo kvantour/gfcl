@@ -6,13 +6,13 @@ MODULE gfcl_list_iterator
   IMPLICIT NONE
   !--- Private/public section ----------------------------------------
   PRIVATE
+  PUBLIC :: ListIterator
   !--- Data types ----------------------------------------------------
   ! a list iterator used to tranverse the list and point to objects to
   ! insert or delete.
   TYPE, EXTENDS(BidirectionalIterator) :: ListIterator
      !--- Component part
-     PRIVATE
-     TYPE(ListNode), POINTER :: tp_node => NULL()
+     TYPE(ListNode), POINTER :: tp_node_ => NULL()
      
    CONTAINS
      !--- Type-bound-procedure part
@@ -36,7 +36,7 @@ CONTAINS
     ! --- Declaration of arguments -------------------------------------
     CLASS(ListIterator), INTENT(inout) :: t_this
     ! --- Executable Code ----------------------------------------------
-    NULLIFY(t_this%tp_node)
+    NULLIFY(t_this%tp_node_)
   END SUBROUTINE initial_void__
 
   ! creates a copy from an iterator
@@ -45,14 +45,14 @@ CONTAINS
     CLASS(ListIterator), INTENT(inout)         :: t_this
     CLASS(ListIterator), INTENT(in)   , TARGET :: t_that
     ! --- Executable Code ----------------------------------------------
-    t_this%tp_node => t_that%tp_node
+    t_this%tp_node_ => t_that%tp_node_
   END SUBROUTINE initial_copy__
 
   SUBROUTINE final__(t_this)
     ! --- Declaration of arguments -------------------------------------
     CLASS(ListIterator), INTENT(inout) :: t_this
     ! --- Executable Code ----------------------------------------------
-    NULLIFY(t_this%tp_node)
+    NULLIFY(t_this%tp_node_)
   END SUBROUTINE final__
 
   ! next
@@ -60,7 +60,7 @@ CONTAINS
     ! --- Declaration of arguments -------------------------------------
     CLASS(ListIterator), INTENT(inout) :: t_this
     ! --- Executable Code ----------------------------------------------
-    t_this%tp_node => t_this%tp_node%get_next()
+    t_this%tp_node_ => t_this%tp_node_%tp_next_
   END SUBROUTINE next__
 
   ! dec
@@ -69,7 +69,7 @@ CONTAINS
     ! decrements the iterator it and returns it
     CLASS(ListIterator), INTENT(inout) :: t_this
     ! --- Executable Code ----------------------------------------------
-    t_this%tp_node => t_this%tp_node%get_prev()
+    t_this%tp_node_ => t_this%tp_node_%tp_prev_
   END SUBROUTINE prev__
 
   ! eq
@@ -82,7 +82,7 @@ CONTAINS
     ! --- Executable Code ----------------------------------------------
     SELECT TYPE (t_that)
     TYPE is (ListIterator)
-       b = ASSOCIATED(t_this%tp_node,t_that%tp_node)
+       b = ASSOCIATED(t_this%tp_node_,t_that%tp_node_)
     CLASS default
        b = .FALSE.
     END SELECT
@@ -98,7 +98,7 @@ CONTAINS
     ! --- Executable Code ----------------------------------------------
     SELECT TYPE (t_that)
     TYPE IS (ListIterator)
-       b = .NOT.ASSOCIATED(t_this%tp_node,t_that%tp_node)
+       b = .NOT.ASSOCIATED(t_this%tp_node_,t_that%tp_node_)
     CLASS default
        b = .TRUE.
     END SELECT
@@ -111,7 +111,7 @@ CONTAINS
     TYPE(ListIterator), INTENT(out) :: t_this
     TYPE(ListIterator), INTENT(in)  :: t_that
     ! --- Executable Code ----------------------------------------------
-    t_this%tp_node => t_that%tp_node
+    t_this%tp_node_ => t_that%tp_node_
   END SUBROUTINE assign
 
   ! assign_node
@@ -120,7 +120,7 @@ CONTAINS
     TYPE(ListIterator), INTENT(out)        :: t_this
     TYPE(ListNode)    , INTENT(in), TARGET :: t_node
     ! --- Executable Code ----------------------------------------------
-    t_this%tp_node => t_node
+    t_this%tp_node_ => t_node
   END SUBROUTINE assign_node
 
   ! get_at
@@ -129,7 +129,7 @@ CONTAINS
     TYPE(ListIterator), INTENT(in) :: t_this
     CLASS(*)          , POINTER    :: tp_data
     ! --- Executable Code ----------------------------------------------
-    tp_data => t_this%tp_node%get_data()
+    tp_data => t_this%tp_node_%ta_data_
   END FUNCTION get_at
 
   ! set_at
@@ -138,7 +138,7 @@ CONTAINS
     TYPE(ListIterator), INTENT(inout) :: t_this
     CLASS(*)          , INTENT(in)    :: t_data
     ! --- Executable Code ----------------------------------------------
-    CALL t_this%tp_node%set_data(t_data)
+    CALL t_this%tp_node_%set_data(t_data)
   END SUBROUTINE set_at
 
   ! transfer
@@ -146,7 +146,7 @@ CONTAINS
     ! --- Declaration of arguments -------------------------------------
     TYPE(ListIterator), INTENT(inout) :: t_this,t_first,t_last
     ! --- Executable Code ----------------------------------------------
-    CALL list_node_transfer(t_this%tp_node,t_first%tp_node,t_last%tp_node)
+    CALL list_node_transfer(t_this%tp_node_,t_first%tp_node_,t_last%tp_node_)
   END SUBROUTINE transfer
   
   ! distance

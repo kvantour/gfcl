@@ -40,22 +40,27 @@ MODULE gfcl_iterators
 
    CONTAINS
      PRIVATE
-     PROCEDURE(op1_ri), DEFERRED, PASS(t_this) :: add_integer_
-     PROCEDURE(op1_ri), DEFERRED, PASS(t_this) :: subtract_integer_
-     PROCEDURE(op2_ri), DEFERRED, PASS(t_this) :: add_integer_pre
-     PROCEDURE(op3_ri), DEFERRED, PASS(t_this) :: subtractIterator
-     PROCEDURE(op4_ri), DEFERRED, PASS(t_this) :: lower_than_
-     PROCEDURE(op4_ri), DEFERRED, PASS(t_this) :: lower_than_equal_
-     PROCEDURE(op4_ri), DEFERRED, PASS(t_this) :: greater_than_
-     PROCEDURE(op4_ri), DEFERRED, PASS(t_this) :: greater_than_equal_
+     PROCEDURE(op1_ri), DEFERRED, PASS(t_this) :: lower_than_
+     PROCEDURE(op1_ri), DEFERRED, PASS(t_this) :: lower_than_equal_
+     PROCEDURE(op1_ri), DEFERRED, PASS(t_this) :: greater_than_
+     PROCEDURE(op1_ri), DEFERRED, PASS(t_this) :: greater_than_equal_
+
+     PROCEDURE(op2_ri), DEFERRED, PASS(t_this) :: next_
+     PROCEDURE(op2_ri), DEFERRED, PASS(t_this) :: prev_
+
+     PROCEDURE(op3_ri), DEFERRED, PASS(t_this) :: add_integer_
+     PROCEDURE(op3_ri), DEFERRED, PASS(t_this) :: subtract_integer_
+     PROCEDURE(op4_ri), DEFERRED, PASS(t_this) :: add_integer_pre_
+
+     PROCEDURE(op5_ri), DEFERRED, PASS(t_this) :: subtract_iterator_
 
      GENERIC, PUBLIC :: OPERATOR(<)  => lower_than_
      GENERIC, PUBLIC :: OPERATOR(<=) => lower_than_equal_
      GENERIC, PUBLIC :: OPERATOR(>)  => greater_than_
      GENERIC, PUBLIC :: OPERATOR(>=) => greater_than_equal_
 
-     GENERIC, PUBLIC :: next => next_, add_integer_
-     GENERIC, PUBLIC :: prev => prev_, subtract_integer_
+     GENERIC, PUBLIC :: next => add_integer_
+     GENERIC, PUBLIC :: prev => subtract_integer_
      
   END TYPE RandomAccessIterator
 
@@ -65,7 +70,7 @@ MODULE gfcl_iterators
      FUNCTION op1_fi(t_this, t_that) RESULT(b)
        IMPORT :: ForwardIterator
        CLASS(forwardIterator), INTENT(in) :: t_this, t_that
-       LOGICAL                             :: b
+       LOGICAL                            :: b
      END FUNCTION op1_fi
 
      SUBROUTINE op2_fi(t_this)
@@ -84,30 +89,37 @@ MODULE gfcl_iterators
        CLASS(BidirectionalIterator), INTENT(inout)  :: t_this
      END SUBROUTINE op2_bi
 
-     SUBROUTINE op1_ri(t_this, n)
+
+
+     FUNCTION op1_ri(t_this, t_that) RESULT(b)
+       IMPORT :: RandomAccessIterator
+       CLASS(RandomAccessIterator), INTENT(in) :: t_this, t_that
+       LOGICAL                                 :: b
+     END FUNCTION op1_ri
+
+     SUBROUTINE op2_ri(t_this)
        IMPORT :: RandomAccessIterator
        CLASS(RandomAccessIterator), INTENT(inout)  :: t_this
-       INTEGER                      , INTENT(in)     :: n
-     END SUBROUTINE op1_ri
+     END SUBROUTINE op2_ri
 
-     FUNCTION op2_ri(n, t_this) RESULT(itr)
+     SUBROUTINE op3_ri(t_this, n)
+       IMPORT :: RandomAccessIterator
+       CLASS(RandomAccessIterator), INTENT(inout)  :: t_this
+       INTEGER                    , INTENT(in)     :: n
+     END SUBROUTINE op3_ri
+
+     FUNCTION op4_ri(n, t_this) RESULT(itr)
        IMPORT :: RandomAccessIterator
        CLASS(RandomAccessIterator), INTENT(in)  :: t_this
        INTEGER                    , INTENT(in)  :: n
        CLASS(RandomAccessIterator), ALLOCATABLE :: itr
-     END FUNCTION op2_ri
+     END FUNCTION op4_ri
      
-     FUNCTION op3_ri(t_this, t_that) RESULT(itr)
+     FUNCTION op5_ri(t_this, t_that) RESULT(itr)
        IMPORT :: RandomAccessIterator
        CLASS(RandomAccessIterator), INTENT(in)  :: t_this, t_that
        CLASS(RandomAccessIterator), ALLOCATABLE :: itr
-     END FUNCTION op3_ri
-
-     FUNCTION op4_ri(t_this, t_that) RESULT(b)
-       IMPORT :: RandomAccessIterator
-       CLASS(RandomAccessIterator), INTENT(in) :: t_this, t_that
-       LOGICAL                                 :: b
-     END FUNCTION op4_ri
+     END FUNCTION op5_ri
   END INTERFACE
 
 CONTAINS

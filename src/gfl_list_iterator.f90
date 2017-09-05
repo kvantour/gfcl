@@ -22,10 +22,13 @@ MODULE gfcl_list_iterator
      PROCEDURE :: next_     => next__
      PROCEDURE :: prev_     => prev__
 
+
      PROCEDURE :: initial_void_ => initial_void__
      PROCEDURE :: initial_copy_ => initial_copy__
      
-     GENERIC, PUBLIC :: initial => initial_void_, initial_copy_
+     PROCEDURE, PUBLIC :: get     => get__
+     PROCEDURE, PUBLIC :: set     => set__
+     GENERIC  , PUBLIC :: initial => initial_void_, initial_copy_
   END TYPE ListIterator
 
   !--- Interfaces ----------------------------------------------------               
@@ -124,22 +127,22 @@ CONTAINS
   END SUBROUTINE assign_node
 
   ! get_at
-  FUNCTION get_at(t_this) RESULT(tp_data)
+  FUNCTION get__(t_this) RESULT(tp_value)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(ListIterator), INTENT(in) :: t_this
-    CLASS(*)          , POINTER    :: tp_data
+    CLASS(ListIterator), INTENT(in) :: t_this
+    CLASS(*)           , POINTER    :: tp_value
     ! --- Executable Code ----------------------------------------------
-    tp_data => t_this%tp_node_%ta_data_
-  END FUNCTION get_at
+    tp_value => t_this%tp_node_%ta_data_
+  END FUNCTION get__
 
   ! set_at
-  SUBROUTINE set_at(t_this,t_data)
+  SUBROUTINE set__(t_this,t_value)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(ListIterator), INTENT(inout) :: t_this
-    CLASS(*)          , INTENT(in)    :: t_data
+    CLASS(ListIterator), INTENT(inout) :: t_this
+    CLASS(*)           , INTENT(in)    :: t_value
     ! --- Executable Code ----------------------------------------------
-    CALL t_this%tp_node_%set_data(t_data)
-  END SUBROUTINE set_at
+    CALL t_this%tp_node_%set(t_value)
+  END SUBROUTINE set__
 
   ! transfer
   SUBROUTINE transfer(t_this,t_first,t_last)
@@ -152,16 +155,14 @@ CONTAINS
   ! distance
   FUNCTION distance(t_first,t_last) RESULT(n)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(ListIterator), INTENT(in) :: t_first,t_last
-    INTEGER  :: n
-    TYPE(ListIterator) :: itr
+    TYPE(ListIterator), VALUE :: t_first,t_last
+    INTEGER                   :: n
     ! --- Executable Code ----------------------------------------------
     n = 0
-    itr = t_first
-    DO WHILE (itr /= t_last)
-       n = n+1
-       CALL itr%next()
+    DO WHILE (t_first /= t_last)
+       n = n + 1
+       CALL t_first%next()
     END DO
-  END FUNCTION  distance
+  END FUNCTION distance
 
 END MODULE gfcl_list_iterator

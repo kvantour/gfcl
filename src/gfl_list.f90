@@ -97,60 +97,54 @@ MODULE gfcl_list
   !--- Interfaces ----------------------------------------------------               
 CONTAINS
 
-  ! ! list_construct_default
-  ! SUBROUTINE list_construct_default(this)
-  !   ! Constructs an empty container, WITH no elements.
-  !   TYPE(List), INTENT(inout),TARGET :: this
-  !   IF (ASSOCIATED(this%node%next)) CALL list_clear(this)
-  !   this%node%next => this%node
-  !   this%node%prev => this%node
-  !   CALL stl_new(this%node%data_t)
-  ! END SUBROUTINE list_construct_default
+  ! initialise_empty__
+  ! Constructs an empty container, WITH no elements.
+  SUBROUTINE initialise_void__(t_this)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout), TARGET :: t_this
+    ! --- Executable Code ----------------------------------------------
+    IF (ASSOCIATED(t_this%t_node_%tp_next_)) CALL list_clear(t_this)
+    t_this%t_node_%tp_next_ => t_this%t_node_
+    t_this%t_node_%tp_prev_ => t_this%t_node_
+  END SUBROUTINE initialise_void__
 
-  ! ! list_construct_default
-  ! SUBROUTINE list_construct_fill(this,n,val)
-  !   ! Constructs an empty container, WITH no elements.
-  !   TYPE(List), INTENT(inout),TARGET :: this
-  !   INTEGER, INTENT(in) :: n
-  !   TYPE(value_type), INTENT(in) :: val
+  ! initialise_fill__
+  ! Constructs a container filled with count values
+  SUBROUTINE initialise_fill__(t_this,i_count,t_value)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout) :: t_this
+    INTEGER   , INTENT(in)    :: i_count
+    CLASS(*)  , INTENT(in)    :: t_value
+    ! --- Executable Code ----------------------------------------------
+    CALL initialise_empty__(t_this)
+    CALL insert_fill__(t_this%end(),i_count,t_value)
+  END SUBROUTINE initialise_fill__
 
-  !   TYPE(ListIterator) :: pos
+  ! list_construct_range
+  SUBROUTINE initialise_range__(t_this,t_first,t_last)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List)        , INTENT(inout) :: t_this
+    TYPE(ListIterator), INTENT(in)    :: t_first, t_last
+    ! --- Executable Code ----------------------------------------------
+    CALL initialise_empty__(t_this)
+    CALL insert_range__(t_this%end(),t_first,t_last)
+  END SUBROUTINE initialise_range__
 
-  !   CALL list_construct_default(this)
-  !   pos%node => this%node
-  !   CALL list_insert_fill(pos,n,val)
-  ! END SUBROUTINE list_construct_fill
+  SUBROUTINE initialise_copy__(t_this,t_that)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout) :: t_this
+    TYPE(List), INTENT(in)    :: t_that
+    ! --- Executable Code ----------------------------------------------
+    CALL initialise_empty__(t_this)
+    CALL insert_range__(t_this%end(),t_that%begin(),t_that%end())
+  END SUBROUTINE initialise_copy__
 
-  ! ! list_construct_range
-  ! SUBROUTINE list_construct_range(this,first,last)
-  !   TYPE(List), INTENT(inout), TARGET :: this
-  !   TYPE(ListIterator), INTENT(in) :: first,last
-  !   TYPE(ListIterator)             :: tmp
-
-  !   CALL list_construct_default(this)
-  !   tmp%node => this%node
-  !   CALL list_insert_range(tmp,first,last)
-  ! END SUBROUTINE list_construct_range
-
-  ! SUBROUTINE list_construct_copy(this,x)
-  !   TYPE(List), INTENT(inout), TARGET :: this
-  !   TYPE(List), INTENT(in)            :: x
-  !   TYPE(ListIterator) :: pos,first,last
-    
-  !   CALL list_construct_default(this)
-  !   pos = list_begin(x)
-  !   first%node => pos%node
-  !   pos = list_end(x)
-  !   last%node => pos%node
-  !   pos%node => this%node
-    
-  !   CALL list_insert_range(pos,first,last)
-  ! END SUBROUTINE list_construct_copy
-
-  ! SUBROUTINE list_destruct(this)
-  !   TYPE(List), intent(inout) :: this
-  !   CALL list_clear(this)
-  ! END SUBROUTINE list_destruct
+  SUBROUTINE finalise__(t_this)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout) :: t_this
+    ! --- Executable Code ----------------------------------------------
+    CALL list_clear(t_this)
+  END SUBROUTINE finalise__
 
   !===================================================================
   ! 
@@ -178,7 +172,6 @@ CONTAINS
     ! --- Executable Code ----------------------------------------------
     iterator = ListIterator(t_this%t_node_)
   END FUNCTION end__
-
 
   !===================================================================
   ! 
@@ -241,136 +234,136 @@ CONTAINS
   ! list_resize     :: change the size of the list
   !===================================================================
 
-  ! ! list_assign_range
-  ! SUBROUTINE assign_range__(t_this, first, last)
-  !   ! the new content of list are elements constructed from each of the
-  !   ! elements in the range between first and last, in the same
-  !   ! order. First and last could belong to a different list.
-  !   TYPE(List), INTENT(inout) :: t_this
-  !   TYPE(ListIterator), INTENT(in) :: first, last
+  ! assign_range
+  ! the new content of list are elements constructed from each of the
+  ! elements in the range between first and last, in the same
+  ! order. First and last could belong to a different list.
 
-  !   TYPE(ListIterator) :: f1,f2,l1,l2
-  !   f1 = t_this%begin()
-  !   l1 = t_this%end()
-  !   f2 = first
-  !   l2 = last
+  SUBROUTINE assign_range__(t_this, t_first2, t_last2)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List)        , INTENT(inout) :: t_this
+    TYPE(ListIterator), VALUE         :: t_first2, t_last2
+    ! --- Declaration of variables -------------------------------------
+    TYPE(ListIterator)                :: t_first1, t_last1
+    ! --- Executable Code ----------------------------------------------
+    t_first1 = t_this%begin()
+    t_last1  = t_this%end()
 
-  !   DO WHILE (f1 /= l1 .AND. f2 /= l2)
-  !      CALL list_node_copy_data(f1%node,f2%node)
-  !      CALL f1%prev()
-  !      CALL f2%prev()
-  !   END DO
-  !   IF (f2 == l2) THEN
-  !      CALL stl_erase(f1,l1)
-  !   ELSE
-  !      CALL stl_insert(l1,f2,l2)
-  !   END IF
-  ! END SUBROUTINE assign_range__
+    DO WHILE (t_first1 /= t_last1 .AND. t_first2 /= t_last2)
+       CALL t_first1%set(t_first2%get())
+       CALL t_first1%next()
+       CALL t_first2%next()
+    END DO
+    IF (t_first2 == t_last2) THEN
+       CALL erase_range__(t_first1,t_last1)
+    ELSE
+       CALL insert_range__(t_last1,t_first2, t_last2)
+    END IF
+  END SUBROUTINE assign_range__
 
-  ! ! list_assign_fill
-  ! SUBROUTINE assign_fill__(t_this,n,val)
-  !   ! the new contents are n elements, each initialized to a copy of
-  !   ! val.
-  !   TYPE(List), INTENT(inout) :: t_this
-  !   INTEGER, INTENT(in)           :: n
-  !   TYPE(value_type), INTENT(in)   :: val
+  ! list_assign_fill
+  ! the new contents are n elements, each initialized to a copy of
+  ! val.
+  SUBROUTINE assign_fill__(t_this,i_count,t_value)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout) :: t_this
+    INTEGER   , VALUE         :: i_count
+    CLASS(*)  , INTENT(in)    :: t_value
+    ! --- Declaration of variables -------------------------------------
+    TYPE(ListIterator)        :: t_iterator
+    ! --- Executable Code ----------------------------------------------
+    t_iterator = t_this%begin()
 
-  !   TYPE(ListIterator) :: it
-  !   INTEGER             :: m
-  !   TYPE(list_node)     :: dummy
-  !   it = t_this%begin()
-  !   m = n
-  !   dummy%data_t = val
+    DO WHILE(t_iterator /= t_this%end() .AND. i_count > 0)
+       CALL t_iterator%set(t_value)
+       CALL t_iterator%next()
+       i_count = i_count - 1
+    END DO
+    IF (i_count > 0) THEN
+       CALL insert_fill__(t_this%end(),i_count,t_value)
+    ELSE
+       CALL erase_range__(t_iterator,t_this%end())
+    END IF
+  END SUBROUTINE assign_fill__
 
-  !   DO WHILE(it /= t_this%end() .AND. m > 0)
-  !      CALL list_node_copy_data(it%node,dummy)
-  !      CALL it%prev()
-  !      m = m - 1
-  !   END DO
-  !   IF (m > 0) THEN
-  !      CALL stl_insert(t_this%end(),m,val)
-  !   ELSE
-  !      CALL stl_erase(it,t_this%end())
-  !   END IF
-  ! END SUBROUTINE assign_fill__
-
-  ! SUBROUTINE assign_list__(x,y)
-  !   TYPE(List), INTENT(inout) :: x
-  !   TYPE(List), INTENT(in) :: y
-
-  !   CALL stl_assign(x,y%begin(),y%end())
-  ! END SUBROUTINE assign_list__
+  SUBROUTINE assign_list__(t_this,t_that)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout) :: t_this
+    TYPE(List), INTENT(in)    :: t_that
+    ! --- Executable Code ----------------------------------------------
+    CALL assign_range__(t_this,t_that%begin(),t_this%end())
+  END SUBROUTINE assign_list__
 
 
   ! list_insert_element
   ! adds single element with value val before pos
   ! input pos :: iterator
   ! input val :: TYPE(value_type)
-  SUBROUTINE insert_element__(t_position, t_data)
-    TYPE(ListIterator), VALUE      :: t_position
-    CLASS(*)          , INTENT(in) :: t_data
-    TYPE(ListNode)    , POINTER    :: node
-    ALLOCATE(node)
-    CALL stl_new(node%data_t,val)
-    CALL node%hook(t_position%tp_node_)
+  SUBROUTINE insert_element__(t_position, t_value)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(ListIterator), INTENT(in)           :: t_position
+    CLASS(*)          , INTENT(in), OPTIONAL :: t_value
+    ! --- Declaration of variables -------------------------------------
+    TYPE(ListNode)    , POINTER              :: tp_node
+    ! --- Executable Code ----------------------------------------------
+    ALLOCATE(tp_node)
+    IF (PRESENT(t_value)) CALL tp_node%set(t_value)
+    CALL tp_node%hook(t_position%tp_node_)
   END SUBROUTINE insert_element__
 
-  ! ! list_insert_fill
-  ! SUBROUTINE insert_fill__(pos,n,val)
-  !   ! Adds n times the value val before position pos
-  !   ! input pos :: iterator
-  !   ! input n   :: integer
-  !   ! input val :: TYPE(value_type)
+  ! list_insert_fill
+  ! Adds n times the value val before position pos
+  ! input pos :: iterator
+  ! input n   :: integer
+  ! input val :: TYPE(value_type)
+  SUBROUTINE insert_fill__(t_position,i_count,t_value)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(ListIterator), INTENT(in)           :: t_position
+    INTEGER           , VALUE                :: i_count
+    CLASS(*)          , INTENT(in), OPTIONAL :: t_value
+    ! --- Executable Code ----------------------------------------------
+    ! we do not need to increment pos as the new element remains
+    ! pointing at the same node and all elements are inserted
+    ! before that on.
+    IF (PRESENT(t_value)) THEN
+       DO WHILE (i_count > 0)
+          CALL insert_element__(t_position, t_value)
+          i_count = i_count - 1
+       END DO
+    ELSE
+       DO WHILE (i_count > 0)
+          CALL insert_element__(t_position)
+          i_count = i_count - 1
+       END DO
+    END IF
+  END SUBROUTINE insert_fill__
 
-  !   TYPE(ListIterator) :: pos
-  !   TYPE(value_type), INTENT(in) :: val
-  !   INTEGER, INTENT(in) :: n
-  !   INTEGER :: IDX
-
-  !   DO IDX=1,n
-  !      ! we do not need to increment pos as the new element remains
-  !      ! pointing at the same node and all elements are inserted
-  !      ! before that on.
-  !      CALL list_insert_element(pos,val)
-  !   END DO
-  ! END SUBROUTINE insert_fill__
-
-  ! ! list_insert_range
-  ! SUBROUTINE insert_range__(pos,first,last)
-  !   ! Adds the elements from [first,last) before pos
-  !   ! element last is excluded
-
-  !   TYPE(ListIterator), INTENT(inout) :: pos
-  !   TYPE(ListIterator), INTENT(in) :: first,last
-  !   TYPE(ListIterator)             :: tmp
-
-  !   tmp%node => first%node
-  !   DO WHILE (tmp /= last)
-  !      CALL list_insert_element(pos,tmp%node%data_t)
-  !      CALL tmp%prev()
-  !   END DO
-  ! END SUBROUTINE insert_range__
+  ! list_insert_range
+  ! Adds the elements from [first,last) before pos
+  ! element last is excluded
+  SUBROUTINE insert_range__(t_position, t_first, t_last)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(ListIterator), INTENT(in) :: t_position
+    TYPE(ListIterator), VALUE      :: t_first
+    TYPE(ListIterator), INTENT(in) :: t_last
+    ! --- Executable Code ----------------------------------------------
+    DO WHILE (t_first /= t_last)
+       CALL insert_element__(t_position,t_first%get())
+       CALL t_first%next()
+    END DO
+  END SUBROUTINE insert_range__
 
   ! list_erase_element
   ! Removes from the list container a single element located at pos.
   ! After the erase is done, pos points to the next element
-  SUBROUTINE erase_element__(t_position,DestroyElement)
+  SUBROUTINE erase_element__(t_position)
     ! --- Declaration of arguments -------------------------------------
     TYPE(ListIterator), INTENT(inout) :: t_position
-    OPTIONAL                          :: DestroyElement
-    INTERFACE
-       SUBROUTINE DestroyElement(t_data)
-         CLASS(*), INTENT(inout) :: t_data
-       END SUBROUTINE DestroyElement
-    END INTERFACE
     ! --- Declaration of variables -------------------------------------
     TYPE(ListIterator)                :: t_tmp
     ! --- Executable Code ----------------------------------------------
     t_tmp = t_position
     CALL t_tmp%next()
-    IF (PRESENT(DestroyElement)) THEN
-       CALL DestroyElement(t_position%tp_node_%ta_data_)
-    END IF
     CALL t_position%tp_node_%unhook()
     DEALLOCATE(t_position%tp_node_)
     NULLIFY(t_position%tp_node_)
@@ -380,445 +373,428 @@ CONTAINS
   ! list_erase_range
   ! Removes from the list container all elements between
   ! [first,last), excluding last
-  SUBROUTINE erase_range__(first,last, DestroyElement)
+  SUBROUTINE erase_range__(t_first,t_last)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(ListIterator), VALUE :: first,last
-    OPTIONAL                  :: DestroyElement
-    INTERFACE
-       SUBROUTINE DestroyElement(t_data)
-         CLASS(*), INTENT(inout) :: t_data
-       END SUBROUTINE DestroyElement
-    END INTERFACE
+    TYPE(ListIterator), VALUE :: t_first, t_last
     ! --- Executable Code ----------------------------------------------
-    IF (PRESENT(DestroyElement)) THEN
-       DO WHILE (first /= last)
-          CALL erase_element__(first)
-       END DO
-    ELSE
-       DO WHILE (first /= last)
-          CALL erase_element__(first)
-       END DO
-    END IF
+    DO WHILE (t_first /= t_last)
+       CALL erase_element__(t_first)
+    END DO
   END SUBROUTINE erase_range__
 
+  ! list_push_front 
+  ! Inserts a new element at the beginning of the list, right before
+  ! its current first element. The content of val is copied (or
+  ! moved) to the inserted element.
+  ! input list  : TYPE(List)
+  ! input val   : TYPE(value_type)
+  SUBROUTINE push_front__(t_this,t_value)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout) :: t_this
+    CLASS(*)  , INTENT(in)    :: t_value
+    ! --- Executable Code ----------------------------------------------
+    CALL insert_element__(t_this%begin(),t_value)
+  END SUBROUTINE push_front__
 
-  ! ! list_push_front 
-  ! SUBROUTINE push_front__(t_this,val)
-  !   ! Inserts a new element at the beginning of the list, right before
-  !   ! its current first element. The content of val is copied (or
-  !   ! moved) to the inserted element.
-  !   ! input list  : TYPE(List)
-  !   ! input val   : TYPE(value_type)
+  ! list_push_back
+  ! Adds a new element at the end of the list container, after its
+  ! current last element. The content of val is copied (or moved) to
+  ! the new element.
+  ! input list  : TYPE(List)
+  ! input val   : TYPE(value_type)
+  SUBROUTINE push_back__(t_this,t_value)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout) :: t_this
+    CLASS(*)  , INTENT(in)    :: t_value
+    ! --- Executable Code ----------------------------------------------
+    CALL insert_element__(t_this%end(),t_value)
+  END SUBROUTINE push_back__
 
-  !   TYPE(List), INTENT(inout) :: t_this
-  !   TYPE(value_type), INTENT(in) :: val
+  ! list_pop_front
+  ! Removes the first element in the list container, effectively
+  ! reducing its size by one. T_this destroys the removed element.
+  ! input list : TYPE(List)
+  SUBROUTINE pop_front__(t_this)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout) :: t_this
+    ! --- Declaration of variables -------------------------------------
+    TYPE(ListIterator)        :: t_iterator
+    ! --- Executable Code ----------------------------------------------
+    t_iterator = t_this%begin()
+    CALL erase_element__(t_iterator)
+  END SUBROUTINE pop_front__
 
-  !   CALL list_insert_element(t_this%begin(),val)
-  ! END SUBROUTINE push_front__
+  ! list_pop_back
+  ! Removes the last element in the list container, effectively
+  ! reducing its size by one. This destroys the removed element.
+  ! input list : TYPE(List)
+  SUBROUTINE pop_back__(t_this)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout) :: t_this
+    ! --- Declaration of variables -------------------------------------
+    TYPE(ListIterator)        :: t_iterator
+    ! --- Executable Code ----------------------------------------------
+    t_iterator = t_this%end()
+    CALL t_iterator%prev()
+    CALL erase_element__(t_iterator)
+  END SUBROUTINE pop_back__
 
-  ! ! list_push_back
-  ! SUBROUTINE push_back__(t_this,val)
-  !   ! Adds a new element at the end of the list container, after its
-  !   ! current last element. The content of val is copied (or moved) to
-  !   ! the new element.
-  !   ! input list  : TYPE(List)
-  !   ! input val   : TYPE(value_type)
+  ! list_clear
+  ! Removes all elements from the list container (which are
+  ! destroyed), and leaving the container with a size of 0.
+  ! input list : TYPE(List)
 
-  !   TYPE(List), INTENT(inout) :: t_this
-  !   TYPE(value_type), INTENT(in) :: val
+  SUBROUTINE clear__(t_this)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout) :: t_this
+    ! --- Executable Code ----------------------------------------------
+    CALL erase_range__(t_this%begin(),t_this%end())
+  END SUBROUTINE clear__
 
-  !   CALL list_insert_element(t_this%end(),val)
-  ! END SUBROUTINE push_back__
+  ! list_swap
+  ! Exchanges the content of the container x by the content of y,
+  ! which is another list of the same TYPE. Sizes may differ.  After
+  ! the call to this routine, the elements in y are those which were
+  ! in x before the call, and the elements of x are those which were
+  ! in y. All iterators, references and pointers remain valid for
+  ! the swapped objects.
+  SUBROUTINE swap__(t_listx, t_listy)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout) :: t_listx, t_listy
+    ! --- Executable Code ----------------------------------------------
+    CALL t_listx%t_node_%swap(t_listy%t_node_)
+  END SUBROUTINE swap__
 
-  ! ! list_pop_front
-  ! SUBROUTINE pop_front__(t_this)
-  !   ! Removes the first element in the list container, effectively
-  !   ! reducing its size by one. T_this destroys the removed element.
-  !   ! input list : TYPE(List)
+  ! list_resize
+  ! Resizes the container so that it contains n elements. If n is
+  ! smaller than the current container size, the content is reduced
+  ! to its first n elements, removing those beyond (and destroying
+  ! them). If n is greater than the current container size, the
+  ! content is expanded by inserting at the end as many elements as
+  ! needed to reach a size of n. If val is specified, the new
+  ! elements are initialized as copies of val, otherwise, they are
+  ! value-initialized. Notice that this function changes the actual
+  ! content of the container by inserting or erasing elements from
+  ! it.
 
-  !   TYPE(List), intent(inout) :: t_this
-  !   TYPE(ListIterator) :: tmp
-  !   tmp = t_this%begin()
+  SUBROUTINE resize__(t_this,i_size,t_value)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout)           :: t_this
+    INTEGER   , INTENT(in)              :: i_size
+    CLASS(*)  , INTENT(in)   , OPTIONAL :: t_value
+    ! --- Declaration of variables -------------------------------------
+    TYPE(ListIterator) :: t_iterator
+    INTEGER            :: i_counter
+    ! --- Executable Code ----------------------------------------------
+    t_iterator = t_this%begin()
+    i_counter  = 0
 
-  !   CALL stl_erase(tmp)
-  ! END SUBROUTINE pop_front__
+    DO WHILE (t_iterator /= t_this%end() .AND. i_counter < i_size)
+       CALL t_iterator%next()
+       i_counter = i_counter + 1
+    END DO
+    IF (i_counter == i_size) THEN
+       CALL erase_range__(t_iterator,t_this%end())
+    ELSE
+       IF (PRESENT(t_value)) THEN
+          CALL insert_fill__(t_iterator,i_size - i_counter,t_value)
+       ELSE
+          CALL insert_fill__(t_iterator,i_size - i_counter)
+       END IF
+    END IF
+  END SUBROUTINE resize__
 
-  ! ! list_pop_back
-  ! SUBROUTINE pop_back__(t_this)
-  !   ! Removes the last element in the list container, effectively
-  !   ! reducing its size by one. This destroys the removed element.
-  !   ! input list : TYPE(List)
+  !===================================================================
+  ! 
+  ! list operations
+  !
+  ! list_splice_list    :: Transfer elements from list to list (whole)
+  ! list_splice_element :: Transfer elements from list to list (element)
+  ! list_splice_range   :: Transfer elements from list to list (range)
+  !
+  ! list_merge          :: Merge two sorted lists
+  !
+  !===================================================================
 
-  !   TYPE(List), intent(inout) :: t_this
-  !   TYPE(ListIterator) :: tmp
-  !   tmp = t_this%end()
+  ! Insert contents of another list x The elements of x are inserted
+  ! in constant time in front of the element referenced by position
+  ! pos. x becomes an empty list.
+  SUBROUTINE splice_list__(t_position,t_listx)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(ListIterator), INTENT(in)    :: t_position
+    TYPE(List)        , INTENT(inout) :: t_listx
+    ! --- Declaration of variables -------------------------------------
+    TYPE(ListIterator)                :: first, last
+    ! --- Executable Code ----------------------------------------------
+    IF ( .NOT. t_listx%empty() ) THEN
+       first = t_listx%begin()
+       last  = t_listx%end()
+       CALL t_position%tp_node_%transfer(first%tp_node_, last%tp_node_)
+    END IF
+  END SUBROUTINE splice_list__
 
-  !   CALL list_iterator_dec(tmp)
-  !   CALL stl_erase(tmp)
+  ! Insert element from another list. Removes the element in list x
+  ! referenced by it and inserts it into the current list before
+  ! position pos.
+  SUBROUTINE splice_element__(t_position, t_iterator)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(ListIterator), INTENT(in) :: t_position
+    TYPE(ListIterator), INTENT(in) :: t_iterator
+    ! --- Declaration of variables -------------------------------------
+    TYPE(ListIterator) :: t_iterator_next
+    ! --- Executable Code ----------------------------------------------
+    t_iterator_next = t_iterator
+    CALL t_iterator_next%next()
+    IF (t_position == t_iterator .OR. t_position == t_iterator_next) RETURN
+    CALL t_position%tp_node_%transfer(t_iterator     %tp_node_, &
+                                      t_iterator_next%tp_node_  )
+  END SUBROUTINE splice_element__
 
-  ! END SUBROUTINE pop_back__
 
-  ! ! list_clear
-  ! SUBROUTINE clear__(t_this)
-  !   ! Removes all elements from the list container (which are
-  !   ! destroyed), and leaving the container with a size of 0.
-  !   ! input list : TYPE(List)
+  ! Insert range from another. Removes elements in the range
+  ! [first,last) and inserts them before position in constant time.
+  ! Undefined if position pos is in [first,last).
+  SUBROUTINE splice_range__(t_position, t_first, t_last)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(ListIterator), INTENT(in) :: t_position, t_first, t_last
+    ! --- Executable Code ----------------------------------------------
+    IF (t_first /= t_last) THEN
+       CALL t_position%tp_node_%transfer(t_first%tp_node_, &
+                                         t_last %tp_node_  )
+    END IF
+  END SUBROUTINE splice_range__
 
-  !   TYPE(List), INTENT(inout) :: t_this
-
-  !   CALL list_erase_range(t_this%begin(),t_this%end())
-  ! END SUBROUTINE clear__
-
-  ! ! list_swap
-  ! SUBROUTINE swap__(lstx,lsty)
-  !   ! Exchanges the content of the container x by the content of y,
-  !   ! which is another list of the same TYPE. Sizes may differ.  After
-  !   ! the call to this routine, the elements in y are those which were
-  !   ! in x before the call, and the elements of x are those which were
-  !   ! in y. All iterators, references and pointers remain valid for
-  !   ! the swapped objects.
-  !   TYPE(List), INTENT(inout) :: lstx, lsty
-  !   CALL list_node_swap(lstx%node,lsty%node)
-  ! END SUBROUTINE swap__
-
-  ! ! list_resize
-  ! SUBROUTINE resize__(t_this,new_size,val)
-  !   ! Resizes the container so that it contains n elements. If n is
-  !   ! smaller than the current container size, the content is reduced
-  !   ! to its first n elements, removing those beyond (and destroying
-  !   ! them). If n is greater than the current container size, the
-  !   ! content is expanded by inserting at the end as many elements as
-  !   ! needed to reach a size of n. If val is specified, the new
-  !   ! elements are initialized as copies of val, otherwise, they are
-  !   ! value-initialized. Notice that this function changes the actual
-  !   ! content of the container by inserting or erasing elements from
-  !   ! it.
-
-  !   ! input list : TYPE(List)
-  !   ! input new_size : integer
-  !   ! input val      : value
+  ! Removes every element in the list for which pred(elem,val) ==
+  ! true. Remaining elements stay in list order. Note that this
+  ! function only erases the elements, and that if the elements
+  ! themselves are pointers, the pointed-to memory is not touched in
+  ! any way.  Managing the pointer is the user's responsibility.
+  SUBROUTINE remove_value__(t_this,t_value,BinaryPredicate)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout), TARGET :: t_this
+    CLASS(*)  , INTENT(in)   , TARGET :: t_value
+    INTERFACE
+       LOGICAL FUNCTION BinaryPredicate(x,y)
+         CLASS(*), INTENT(in) :: x,y
+       END FUNCTION BinaryPredicate
+    END INTERFACE
+    ! --- Declaration of variables -------------------------------------
+    CLASS(*) , POINTER :: p1,p2
+    TYPE(ListIterator) :: first,last,extra,next
+    ! --- Executable Code ----------------------------------------------
+    first = t_this%begin()
+    last  = t_this%end()
+    extra = last
     
-  !   TYPE(List), INTENT(inout) :: t_this
-  !   INTEGER, INTENT(in)       :: new_size
-  !   TYPE(value_type), INTENT(in), OPTIONAL :: val
+    DO WHILE (first /= last)
+       next = first
+       CALL next%next()
+
+       IF (BinaryPredicate(first%tp_node_%ta_data_,t_value)) THEN
+          ! We do this in case we passed a pointer of a listvalue to
+          ! the t_value argument
+          p1 => t_value
+          p2 => first%tp_node_%ta_data_
+          IF (ASSOCIATED(p1,p2)) THEN
+             extra = first
+          ELSE
+             CALL erase_element__(first)
+          END IF
+       END IF
+       first = next
+    END DO
+    IF (extra /= last) THEN
+       CALL erase_element__(extra)
+    END IF
+  END SUBROUTINE remove_value__
+
+  ! Removes every element in the list for which the predicate
+  ! pred(elem) returns true.  Remaining elements stay in list order.
+  ! Note that this function only erases the elements, and that if
+  ! the elements themselves are pointers, the pointed-to memory is
+  ! not touched in any way.  Managing the pointer is the user's
+  ! responsibility.
+  SUBROUTINE remove_if__(t_this,UnaryPredicate)
+  ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout), TARGET :: t_this
+    INTERFACE
+       LOGICAL FUNCTION UnaryPredicate(x)
+         CLASS(*), INTENT(in) :: x
+       END FUNCTION UnaryPredicate
+    END INTERFACE
+    ! --- Declaration of variables -------------------------------------
+    TYPE(ListIterator) :: first,last,next
+    ! --- Executable Code ----------------------------------------------
+    first = t_this%begin()
+    last  = t_this%end()
     
-  !   TYPE(ListIterator) :: tmp
-  !   INTEGER             :: len
-  !   TYPE(value_type), POINTER :: vpt
+    DO WHILE (first /= last)
+       next = first
+       CALL next%next()
+       IF (UnaryPredicate(first%tp_node_%ta_data_)) THEN
+          CALL erase_element__(first)
+       END IF
+       first = next
+    END DO
+  END SUBROUTINE remove_if__
 
-  !   tmp = t_this%begin()
-  !   len = 0
-  !   NULLIFY(vpt)
+  ! For each consecutive set of elements [first,last) that satisfy
+  ! pred(first,i) where i is an iterator in [first,last), remove all
+  ! but the first from every consecutive group of equal elements in
+  ! the container. Remaining elements stay in list order.  Note that
+  ! this function only erases the elements, and that if the elements
+  ! themselves are pointers, the pointed-to memory is not touched in
+  ! any way. Managing the pointer is the user's responsibility.
+  SUBROUTINE unique__(t_this,BinaryPredicate)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout) :: t_this
+    INTERFACE
+       LOGICAL FUNCTION BinaryPredicate(x,y)
+         CLASS(*), INTENT(in) :: x,y
+       END FUNCTION BinaryPredicate
+    END INTERFACE
+    ! --- Declaration of variables -------------------------------------
+    TYPE(ListIterator) :: first, last, next
+    ! --- Executable Code ----------------------------------------------
+    first = t_this%begin()
+    last  = t_this%end()
+    IF (first /= last) THEN
+       next = first
+       CALL next%next()
+       DO WHILE (next /= last)
+          IF (BinaryPredicate(first%tp_node_%ta_data_, &
+                              next %tp_node_%ta_data_  )) THEN
+             CALL erase_element__(next)
+          ELSE
+             first = next
+          END IF
+          next = first
+          CALL next%next()
+       END DO
+    END IF
+  END SUBROUTINE unique__
 
-  !   DO WHILE (tmp /= t_this%end() .AND. len < new_size)
-  !      CALL tmp%prev()
-  !      len = len + 1
-  !   END DO
-  !   IF (len == new_size) THEN
-  !      CALL stl_erase(tmp,t_this%end())
-  !   ELSE
-  !      IF (PRESENT(val)) THEN
-  !         CALL stl_insert(tmp,new_size-len,val)
-  !      ELSE
-  !         ALLOCATE(vpt)
-  !         CALL stl_new(vpt)
-  !         CALL stl_insert(tmp,new_size-len,vpt)
-  !         CALL stl_delete(vpt)
-  !         DEALLOCATE(vpt)
-  !         NULLIFY(vpt)
-  !      END IF
-  !   END IF
-  ! END SUBROUTINE resize__
+  ! Merges y into the list x by transferring all of its elements at
+  ! their respective ordered positions into the container (both
+  ! containers shall already be ordered). This effectively removes
+  ! all the elements in y (which becomes empty), and inserts them
+  ! into their ordered position within list x (which expands in size
+  ! by the number of elements transferred). The operation is
+  ! performed without constructing nor destroying any element: they
+  ! are transferred.
 
-  ! !===================================================================
-  ! ! 
-  ! ! list operations
-  ! !
-  ! ! list_splice_list    :: Transfer elements from list to list (whole)
-  ! ! list_splice_element :: Transfer elements from list to list (element)
-  ! ! list_splice_range   :: Transfer elements from list to list (range)
-  ! !
-  ! ! list_merge          :: Merge two sorted lists
-  ! !
-  ! !===================================================================
+  SUBROUTINE merge__(t_this, t_that, BinaryPredicate)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout) :: t_this, t_that
+    INTERFACE
+       LOGICAL FUNCTION BinaryPredicate(x,y)
+         CLASS(*), INTENT(in) :: x,y
+       END FUNCTION BinaryPredicate
+    END INTERFACE
+    ! --- Declaration of variables -------------------------------------
+    TYPE(ListIterator) :: first1, last1
+    TYPE(ListIterator) :: first2, last2
+    TYPE(ListIterator) :: next
+    ! --- Executable Code ----------------------------------------------
+    IF (.NOT.ASSOCIATED(t_this%t_node_%tp_next_%tp_prev_, &
+                        t_that%t_node_%tp_next_%tp_prev_)) THEN
+       first1 = t_this%begin()
+       last1  = t_this%end()
+       first2 = t_that%begin()
+       last2  = t_that%end()
 
-  ! SUBROUTINE list_splice_list(pos,x)
-  !   ! Insert contents of another list x The elements of x are inserted
-  !   ! in constant time in front of the element referenced by position
-  !   ! pos. x becomes an empty list.
-
-  !   TYPE(ListIterator), intent(in) :: pos
-  !   TYPE(List), INTENT(inout) :: x
-  !   TYPE(list_node), POINTER :: node,first,last
-  !   TYPE(ListIterator) :: tmp
-
-  !   IF (.NOT.list_empty(x)) THEN
-  !      node => pos%node
-  !      tmp = list_begin(x)
-  !      first => tmp%node
-  !      tmp = list_end(x)
-  !      last => tmp%node
-  !      CALL list_node_transfer(node,first,last)
-  !   END IF
-  ! END SUBROUTINE list_splice_list
-
-  ! SUBROUTINE list_splice_element(pos,itr)
-  !   ! Insert element from another list. Removes the element in list x
-  !   ! referenced by it and inserts it into the current list before
-  !   ! position pos.
-
-  !   TYPE(ListIterator), intent(in) :: pos
-  !   TYPE(ListIterator), intent(in) :: itr
-  !   TYPE(list_node), POINTER :: node,first,last
-
-  !   TYPE(ListIterator) :: j
-
-  !   j = itr
-  !   j = j%next()
-  !   IF (pos == itr .OR. pos == j) RETURN
-  !   node  => pos%node
-  !   first => itr%node
-  !   last  => j%node
-  !   CALL list_node_transfer(node,first,last)
-  ! END SUBROUTINE list_splice_element
-
-
-  ! SUBROUTINE list_splice_range(pos,first,last)
-  !   ! Insert range from another. Removes elements in the range
-  !   ! [first,last) and inserts them before position in constant time.
-  !   ! Undefined if position pos is in [first,last).
-  !   TYPE(ListIterator), INTENT(in) :: pos, first,last
-  !   TYPE(list_node), POINTER :: n,f,l
-  !   IF (first /= last) THEN
-  !      n => pos%node
-  !      f => first%node
-  !      l => last%node
-  !      CALL list_node_transfer(n,f,l)
-  !   END IF
-  ! END SUBROUTINE list_splice_range
-
-  ! SUBROUTINE list_remove(this,val,pred)
-  !   ! Removes every element in the list for which pred(elem,val) ==
-  !   ! true. Remaining elements stay in list order. Note that this
-  !   ! function only erases the elements, and that if the elements
-  !   ! themselves are pointers, the pointed-to memory is not touched in
-  !   ! any way.  Managing the pointer is the user's responsibility.
-
-  !   TYPE(List), INTENT(inout),TARGET  :: this
-  !   TYPE(value_type), INTENT(inout),TARGET :: val
-  !   INTERFACE
-  !      LOGICAL FUNCTION pred(val1,val2)
-  !        IMPORT :: value_type
-  !        TYPE(value_type), INTENT(in) :: val1,val2
-  !      END FUNCTION pred
-  !   END INTERFACE
-
-  !   TYPE(value_type), POINTER :: p1,p2
-  !   TYPE(ListIterator) :: first,last,extra,next
-    
-  !   CALL stl_assign(first,stl_begin(this))
-  !   CALL stl_assign(last,stl_end(this))
-  !   CALL stl_assign(extra,last)
-    
-  !   DO WHILE (first /= last)
-  !      CALL stl_assign(next,first)
-  !      next = next%next()
-  !      IF (pred(first%node%data_t,val)) THEN
-  !         p1 => val
-  !         p2 => first%node%data_t
-  !         IF (ASSOCIATED(p1,p2)) THEN
-  !            CALL stl_assign(extra,first)
-  !         ELSE
-  !            CALL stl_erase(first)
-  !         END IF
-  !      END IF
-  !      CALL stl_assign(first,next)
-  !   END DO
-  !   IF (extra /= last) THEN
-  !      CALL stl_erase(extra)
-  !   END IF
-  ! END SUBROUTINE list_remove
-
-  ! SUBROUTINE list_remove_if(this,pred)
-  !   ! Removes every element in the list for which the predicate
-  !   ! pred(elem) returns true.  Remaining elements stay in list order.
-  !   ! Note that this function only erases the elements, and that if
-  !   ! the elements themselves are pointers, the pointed-to memory is
-  !   ! not touched in any way.  Managing the pointer is the user's
-  !   ! responsibility.
-
-  !   TYPE(List), INTENT(inout),TARGET  :: this
-  !   INTERFACE
-  !      LOGICAL FUNCTION pred(val)
-  !        IMPORT :: value_type
-  !        TYPE(value_type), INTENT(in) :: val
-  !      END FUNCTION pred
-  !   END INTERFACE
-    
-  !   TYPE(ListIterator) :: first,last,next
-    
-  !   CALL stl_assign(first,stl_begin(this))
-  !   CALL stl_assign(last,stl_end(this))
-    
-  !   DO WHILE (first /= last)
-  !      CALL stl_assign(next,first)
-  !      next = next%next()
-  !      IF (pred(first%node%data_t)) THEN
-  !         CALL stl_erase(first)
-  !      END IF
-  !      CALL stl_assign(first,next)
-  !   END DO
-  ! END SUBROUTINE list_remove_if
-
-  ! SUBROUTINE list_unique(this,pred)
-  !   ! For each consecutive set of elements [first,last) that satisfy
-  !   ! pred(first,i) where i is an iterator in [first,last),
-  !   ! remove all but the first one all but the first one. Remaining
-  !   ! elements stay in list order.  Note that this function only
-  !   ! erases the elements, and that if the elements themselves are
-  !   ! pointers, the pointed-to memory is not touched in any
-  !   ! way. Managing the pointer is the user's responsibility.
-
-  !   TYPE(List), INTENT(inout) :: this
-  !   INTERFACE
-  !      LOGICAL FUNCTION pred(val1,val2)
-  !        IMPORT :: value_type
-  !        TYPE(value_type), INTENT(in) :: val1,val2
-  !      END FUNCTION pred
-  !   END INTERFACE
-
-  !   TYPE(ListIterator) :: first, last, next
-  !   CALL stl_assign(first,list_begin(this))
-  !   CALL stl_assign(last,list_end(this))
-
-  !   IF (first /= last) THEN
-  !      next = stl_inc(first)
-  !      DO WHILE (next /= last)
-  !         IF (pred(first%node%data_t,next%node%data_t)) THEN
-  !            CALL stl_erase(next)
-  !         ELSE
-  !            first = next
-  !         END IF
-  !         next = stl_inc(first)
-  !      END DO
-  !   END IF
-  ! END SUBROUTINE list_unique
-
-  ! SUBROUTINE list_merge(x,y,comp)
-  !   ! Merges y into the list x by transferring all of its elements at
-  !   ! their respective ordered positions into the container (both
-  !   ! containers shall already be ordered). This effectively removes
-  !   ! all the elements in y (which becomes empty), and inserts them
-  !   ! into their ordered position within list x (which expands in size
-  !   ! by the number of elements transferred). The operation is
-  !   ! performed without constructing nor destroying any element: they
-  !   ! are transferred.
-
-  !   TYPE(List), INTENT(inout) :: x,y
-  !   INTERFACE
-  !      LOGICAL FUNCTION comp(val1,val2)
-  !        IMPORT :: value_type
-  !        TYPE(value_type), INTENT(in) :: val1,val2
-  !      END FUNCTION comp
-  !   END INTERFACE
-
-  !   TYPE(ListIterator) :: first1,first2,last1,last2
-  !   TYPE(ListIterator) :: next
-
-  !   IF (.NOT.ASSOCIATED(x%node%next%prev,y%node%next%prev)) THEN
-  !      first1 = list_begin(x)
-  !      last1  = list_end(x)
-  !      first2 = list_begin(y)
-  !      last2  = list_end(y)
-
-  !      DO WHILE (first1 /= last1 .AND. first2 /= last2)
-  !         IF (comp(first2%data_t,first1%data_t)) THEN
-  !            next = first2
-  !            next = stl_inc(next)
-  !            CALL list_iterator_transfer(first1,first2,next)
-  !            first2 = next
-  !         ELSE
-  !            first1 = stl_inc(first1)
-  !         END IF
-  !      END DO
-  !      IF (first2 /= last2) THEN
-  !         CALL list_iterator_transfer(last1,first2,last2)
-  !      END IF
-  !   END IF
-  ! END SUBROUTINE list_merge
-
-  ! SUBROUTINE list_reverse(this)
-  !   ! Reverse the order of the list this
-  !   TYPE(List), INTENT(inout) :: this
-  !   CALL list_node_reverse(this%node)
-  ! END SUBROUTINE list_reverse
+       DO WHILE (first1 /= last1 .AND. first2 /= last2)
+          IF (BinaryPredicate(first2%tp_node_%ta_data_,&
+                              first1%tp_node_%ta_data_ )) THEN
+             next = first2
+             CALL next%next()
+             CALL splice_range__(first1,first2,next)
+             first2 = next
+          ELSE
+             CALL first1%next()
+          END IF
+       END DO
+       IF (first2 /= last2) THEN
+          CALL splice_range__(last1,first2,last2)
+       END IF
+    END IF
+  END SUBROUTINE merge__
+  
+  ! Reverse the order of the list this
+  SUBROUTINE reverse__(t_this)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout) :: t_this
+    ! --- Executable Code ----------------------------------------------
+    CALL t_this%t_node_%reverse()
+  END SUBROUTINE reverse__
 
 
-  ! SUBROUTINE list_sort(this,comp)
-  !   ! Sorts the elements in the list, altering their position within
-  !   ! the container.
-  !   !
-  !   ! The sorting is performed by applying an algorithm that uses comp
-  !   ! to compare elements. This comparison shall produce a strict weak
-  !   ! ordering of the elements (i.e., a consistent transitive
-  !   ! comparison, without considering its reflexiveness).
-  !   !
-  !   ! The resulting order of equivalent elements is stable: i.e.,
-  !   ! equivalent elements preserve the relative order they had before
-  !   ! the call.
-  !   !
-  !   ! The entire operation does not involve the construction,
-  !   ! destruction or copy of any element object. Elements are moved
-  !   ! within the container.
-  !   !
-  !   ! Sorts the elements of this list in NlogN time.
-  !   ! Algorithm : n-way merge sort
+  ! Sorts the elements in the list, altering their position within
+  ! the container.
+  !
+  ! The sorting is performed by applying an algorithm that uses comp
+  ! to compare elements. This comparison shall produce a strict weak
+  ! ordering of the elements (i.e., a consistent transitive
+  ! comparison, without considering its reflexiveness).
+  !
+  ! The resulting order of equivalent elements is stable: i.e.,
+  ! equivalent elements preserve the relative order they had before
+  ! the call.
+  !
+  ! The entire operation does not involve the construction,
+  ! destruction or copy of any element object. Elements are moved
+  ! within the container.
+  !
+  ! Sorts the elements of this list in NlogN time.
+  ! Algorithm : n-way merge sort
+  SUBROUTINE sort__(t_this,BinaryPredicate)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(List), INTENT(inout) :: t_this
+    INTERFACE
+       LOGICAL FUNCTION BinaryPredicate(x,y)
+         CLASS(*), INTENT(in) :: x,y
+       END FUNCTION BinaryPredicate
+    END INTERFACE
+    ! --- Declaration of variables -------------------------------------
+    TYPE(List)                :: carry
+    TYPE(List), DIMENSION(64) :: tmp
+    INTEGER :: fill, counter, i
+    ! --- Executable Code ----------------------------------------------
+    CALL initialise_void__(carry)
+    DO i = 1,64
+       CALL initialise_void__(tmp(i))
+    END DO
 
-  !   TYPE(List), INTENT(inout) :: this
-  !   INTERFACE
-  !      LOGICAL FUNCTION comp(val1,val2)
-  !        IMPORT :: value_type
-  !        TYPE(value_type), INTENT(in) :: val1,val2
-  !      END FUNCTION comp
-  !   END INTERFACE
+    ! Do nothing if the list has length 0 or 1
+    IF (.NOT.ASSOCIATED(t_this%t_node_%tp_next_        , &
+                        t_this%t_node_%tp_next_%tp_prev_ ) .AND. &
 
-  !   TYPE(List) :: carry
-  !   TYPE(List), DIMENSION(64) :: tmp
-  !   INTEGER :: fill, counter, i
+         .NOT.ASSOCIATED(t_this%t_node_%tp_next_%tp_next_, &
+                         t_this%t_node_%tp_next_%tp_prev_  )       ) THEN
+       fill = 1
+       DO
+          CALL splice_element__(carry%begin(),t_this%begin())
+          counter = 1
+          DO WHILE (counter /= fill .AND. &
+               .NOT. tmp(counter)%empty() )
+             CALL merge__(tmp(counter),carry,BinaryPredicate)
+             CALL swap__(carry,tmp(counter))
+             counter = counter + 1
+          END DO
+          CALL swap__(carry,tmp(counter))
+          IF (counter == fill) fill = fill + 1
+          IF (t_this%empty()) EXIT
+       END DO
+       counter = 2
+       DO WHILE (counter  /= fill)
+          CALL merge__(tmp(counter),tmp(counter-1),BinaryPredicate)
+          counter = counter + 1
+       END DO
 
-  !   CALL stl_new(carry)
-  !   DO  i=1,64
-  !      CALL stl_new(tmp(i))
-  !   END DO
+       CALL swap__(t_this,tmp(fill-1))
 
-  !   ! Do nothing if the list has length 0 or 1
-  !   IF (.NOT.ASSOCIATED(this%node%next,this%node%next%prev) .AND. &
-  !        .NOT.ASSOCIATED(this%node%next%next,this%node%next%prev)) THEN
-  !      fill = 1
-
-  !      DO
-  !         CALL stl_splice(list_begin(carry),list_begin(this))
-  !         counter = 1
-  !         DO WHILE (counter /= fill .AND. &
-  !              .NOT.list_empty(tmp(counter)))
-  !            CALL list_merge(tmp(counter),carry,comp)
-  !            CALL list_swap(carry,tmp(counter))
-  !            counter = counter + 1
-  !         END DO
-  !         CALL list_swap(carry,tmp(counter))
-  !         IF (counter == fill) fill = fill + 1
-  !         IF (list_empty(this)) EXIT
-  !      END DO
-  !      counter = 2
-  !      DO WHILE (counter  /= fill)
-  !         CALL list_merge(tmp(counter),tmp(counter-1),comp)
-  !         counter = counter + 1
-  !      END DO
-
-  !      CALL list_swap(this,tmp(fill-1))
-
-  !   END IF
-  ! END SUBROUTINE list_sort
+    END IF
+  END SUBROUTINE sort__
 
 
   

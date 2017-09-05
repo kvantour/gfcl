@@ -11,6 +11,9 @@ MODULE gfcl_iterators
      PROCEDURE(op1_fi), DEFERRED, PASS :: notequal_
      PROCEDURE(op2_fi), DEFERRED, PASS :: next_
 
+     PROCEDURE(op3_fi), DEFERRED, PASS, PUBLIC :: get
+     PROCEDURE(op4_fi), DEFERRED, PASS, PUBLIC :: set
+
      GENERIC, PUBLIC :: OPERATOR(==) => equal_
      GENERIC, PUBLIC :: OPERATOR(/=) => notequal_
 
@@ -21,7 +24,7 @@ MODULE gfcl_iterators
   ! the SEQUENCE of elements in a range in both directions (towards
   ! the END and towards the beginning).
 
-  TYPE, EXTENDS(forwardIterator), ABSTRACT :: BidirectionalIterator
+  TYPE, EXTENDS(ForwardIterator), ABSTRACT :: BidirectionalIterator
    CONTAINS
      PRIVATE
      PROCEDURE(op2_bi), DEFERRED, PASS :: prev_
@@ -69,14 +72,26 @@ MODULE gfcl_iterators
 
      FUNCTION op1_fi(t_this, t_that) RESULT(b)
        IMPORT :: ForwardIterator
-       CLASS(forwardIterator), INTENT(in) :: t_this, t_that
+       CLASS(ForwardIterator), INTENT(in) :: t_this, t_that
        LOGICAL                            :: b
      END FUNCTION op1_fi
 
      SUBROUTINE op2_fi(t_this)
        IMPORT :: ForwardIterator
-       CLASS(forwardIterator), INTENT(inout)  :: t_this
+       CLASS(ForwardIterator), INTENT(inout)  :: t_this
      END SUBROUTINE op2_fi
+
+     FUNCTION op3_fi(t_this) RESULT(tp_value)
+       IMPORT :: ForwardIterator
+       CLASS(ForwardIterator), INTENT(in) :: t_this
+       CLASS(*),               POINTER    :: tp_value
+     END FUNCTION op3_fi
+
+     SUBROUTINE op4_fi(t_this,t_value)
+       IMPORT :: ForwardIterator
+       CLASS(ForwardIterator), INTENT(inout) :: t_this
+       CLASS(*),               INTENT(in)    :: t_value
+     END SUBROUTINE op4_fi
 
      FUNCTION op1_bi(t_this, t_that) RESULT(b)
        IMPORT :: BidirectionalIterator
@@ -126,7 +141,7 @@ CONTAINS
 
   SUBROUTINE advance(forward_iterator,n)
     ! --- Declaration of arguments -------------------------------------
-    CLASS(forwardIterator), INTENT(inout) :: forward_iterator
+    CLASS(ForwardIterator), INTENT(inout) :: forward_iterator
     INTEGER, VALUE                        :: n
     ! --- executable code ----------------------------------------------
     SELECT TYPE(forward_iterator)
@@ -144,7 +159,7 @@ CONTAINS
              n = n+1
           END DO
        END IF
-    CLASS IS (forwardIterator)
+    CLASS IS (ForwardIterator)
        IF (n < 0) ERROR STOP "forward_iterator can only advance forward"
        DO WHILE (n /= 0)
           CALL forward_iterator%next()

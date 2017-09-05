@@ -15,23 +15,18 @@ MODULE gfcl_list_node
 
    CONTAINS
      !--- Type-bound-procedure part
-     PROCEDURE, PRIVATE :: copy_data_ => copy_data__
-     PROCEDURE, PRIVATE :: copy_data_f_ => copy_data_f__
-
      PROCEDURE :: hook     => hook__
      PROCEDURE :: unhook   => unhook__
      PROCEDURE :: swap     => swap__
      PROCEDURE :: transfer => transfer__
      PROCEDURE :: reverse  => reverse__
 
-     PROCEDURE :: get_next => get_next__
-     PROCEDURE :: get_prev => get_prev__
-     PROCEDURE :: get_data => get_data__
-     PROCEDURE :: set_data => set_data__
+     PROCEDURE :: next => next__
+     PROCEDURE :: prev => prev__
+     PROCEDURE :: get  => get__
+     PROCEDURE :: set  => set__
 
-     GENERIC   :: copy_data => copy_data_, copy_data_f_
-
-     !     FINAL :: final___
+     FINAL :: final___
   END TYPE ListNode
   !--- Interfaces ----------------------------------------------------               
 CONTAINS
@@ -60,38 +55,14 @@ CONTAINS
     tp_next%tp_prev_ => tp_prev
   END SUBROUTINE unhook__
 
-  SUBROUTINE copy_data__(t_node,t_data)
+  SUBROUTINE construct_node__(t_node,t_value)
     ! --- Declaration of arguments -------------------------------------
-    CLASS(ListNode), INTENT(inout) :: t_node
-    CLASS(*)       , INTENT(in)    :: t_data
+    CLASS(ListNode) , INTENT(inout) :: t_node
+    CLASS(*)        , INTENT(in)    :: t_value
     ! --- Executable Code ----------------------------------------------
     IF (ALLOCATED(t_node%ta_data_)) DEALLOCATE(t_node%ta_data_)
-    ALLOCATE(t_node%ta_data_,source=t_data)
-  END SUBROUTINE copy_data__
-
-  SUBROUTINE copy_data_f__(t_node,t_data,CopyElement)
-    ! --- Declaration of arguments -------------------------------------
-    CLASS(ListNode), INTENT(inout) :: t_node
-    CLASS(*)       , INTENT(in)    :: t_data
-    INTERFACE
-       SUBROUTINE CopyElement(t_data1,t_data2)
-         CLASS(*), INTENT(inout) :: t_data1
-         CLASS(*), INTENT(in)    :: t_data2
-       END SUBROUTINE CopyElement
-    END INTERFACE
-    ! --- Executable Code ----------------------------------------------
-    IF (.NOT.ALLOCATED(t_node%ta_data_)) ALLOCATE(t_node%ta_data_,mold=t_data)
-    CALL CopyElement(t_node%ta_data_,t_data)
-  END SUBROUTINE copy_data_f__
-
-  SUBROUTINE copy_data(t_node1,t_node2)
-    ! --- Declaration of arguments -------------------------------------
-    CLASS(ListNode), INTENT(inout) :: t_node1
-    CLASS(ListNode), INTENT(in)    :: t_node2
-    ! --- Executable Code ----------------------------------------------
-    IF (ALLOCATED(t_node1%ta_data_)) DEALLOCATE(t_node1%ta_data_)
-    ALLOCATE(t_node1%ta_data_,source=t_node2%ta_data_)
-  END SUBROUTINE copy_data
+    ALLOCATE(t_node%ta_data_,source=t_value)
+  END SUBROUTINE construct_node__
 
   SUBROUTINE swap__(t_node1,t_node2)
     ! --- Declaration of arguments -------------------------------------
@@ -170,38 +141,38 @@ CONTAINS
     END DO
   END SUBROUTINE reverse__
 
-  FUNCTION get_next__(t_node) RESULT(tp)
+  FUNCTION next__(t_node) RESULT(tp)
     ! --- Declaration of arguments -------------------------------------
     CLASS(ListNode), INTENT(inout) :: t_node
-    TYPE(ListNode) , POINTER       :: tp
+    CLASS(ListNode), POINTER       :: tp
     ! --- Executable Code ----------------------------------------------
     tp => t_node%tp_next_
-  END FUNCTION get_next__
+  END FUNCTION next__
 
-  FUNCTION get_prev__(t_node) RESULT(tp)
+  FUNCTION prev__(t_node) RESULT(tp)
     ! --- Declaration of arguments -------------------------------------
     CLASS(ListNode), INTENT(inout) :: t_node
-    TYPE(ListNode) , POINTER       :: tp
+    CLASS(ListNode), POINTER       :: tp
     ! --- Executable Code ----------------------------------------------
     tp => t_node%tp_prev_
-  END FUNCTION get_prev__
+  END FUNCTION prev__
 
-  FUNCTION get_data__(t_node) RESULT(tp)
+  FUNCTION get__(t_node) RESULT(tp)
     ! --- Declaration of arguments -------------------------------------
     CLASS(ListNode), INTENT(inout), TARGET :: t_node
     CLASS(*)       , POINTER       :: tp
     ! --- Executable Code ----------------------------------------------
     tp => t_node%ta_data_
-  END FUNCTION  get_data__
+  END FUNCTION get__
 
-  SUBROUTINE set_data__(t_node,t_data)
+  SUBROUTINE set__(t_node,t_value)
     ! --- Declaration of arguments -------------------------------------
     CLASS(ListNode), INTENT(inout) :: t_node
-    CLASS(*)       , INTENT(in   ) :: t_data
+    CLASS(*)       , INTENT(in   ) :: t_value
     ! --- Executable Code ----------------------------------------------
     IF (ALLOCATED(t_node%ta_data_)) DEALLOCATE(t_node%ta_data_)
-    ALLOCATE(t_node%ta_data_,source=t_data)
-  END SUBROUTINE set_data__
+    ALLOCATE(t_node%ta_data_,source=t_value)
+  END SUBROUTINE set__
 
   SUBROUTINE final___(t_node)
     ! --- Declaration of arguments -------------------------------------

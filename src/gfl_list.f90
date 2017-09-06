@@ -80,17 +80,67 @@ MODULE gfcl_list
      TYPE(ListNode) :: t_node_
 
    CONTAINS
+     PRIVATE
      !--- Type-bound-procedure part
-     ! iterators
-     PROCEDURE :: begin => begin__
-     PROCEDURE :: end   => end__
+     ! initialisors ====================================================
+     PROCEDURE         :: initialise_void__
+     PROCEDURE         :: initialise_copy__
+     PROCEDURE         :: initialise_fill__
+     PROCEDURE         :: initialise_range__
+     GENERIC  , PUBLIC :: initialise     => initialise_void__, &
+                                            initialise_copy__, &
+                                            initialise_fill__, &
+                                            initialise_range__
+     ! iterators =======================================================
+     PROCEDURE, PUBLIC :: begin          => begin__
+     PROCEDURE, PUBLIC :: end            => end__
 
-     ! capacity
-     PROCEDURE :: empty    => empty__
-     PROCEDURE :: size     => size__
-!     PROCEDURE :: max_size => max_size__
+     ! capacity ========================================================
+     PROCEDURE, PUBLIC :: empty          => empty__
+     PROCEDURE, PUBLIC :: size           => size__
 
-     ! element access
+     ! modifiers =======================================================
+     PROCEDURE         :: assign_list__
+     PROCEDURE         :: assign_fill__
+     PROCEDURE         :: assign_range__
+     GENERIC  , PUBLIC :: assign         => assign_list__, &
+                                            assign_fill__, &
+                                            assign_range__
+
+     PROCEDURE, NOPASS :: insert_element__
+     PROCEDURE, NOPASS :: insert_fill__
+     PROCEDURE, NOPASS :: insert_range__
+     GENERIC  , PUBLIC :: insert         => insert_element__, &
+                                            insert_fill__,    &
+                                            insert_range__
+
+     PROCEDURE, NOPASS :: erase_element__
+     PROCEDURE, NOPASS :: erase_range__
+     GENERIC  , PUBLIC :: erase          => erase_element__, &
+                                            erase_range__
+
+     PROCEDURE, PUBLIC :: push_front     => push_front__
+     PROCEDURE, PUBLIC :: push_back      => push_back__
+     PROCEDURE, PUBLIC :: pop_front      => pop_front__
+     PROCEDURE, PUBLIC :: pop_back       => pop_back__
+     PROCEDURE, PUBLIC :: clear          => clear__
+     PROCEDURE, PUBLIC :: swap           => swap__
+     PROCEDURE, PUBLIC :: resize         => resize__
+
+     PROCEDURE, NOPASS :: splice_list__
+     PROCEDURE, NOPASS :: splice_element__
+     PROCEDURE, NOPASS :: splice_range__
+     GENERIC  , PUBLIC :: splice         => splice_list__,    &
+                                            splice_element__, &
+                                            splice_range__
+
+     PROCEDURE, PUBLIC :: remove         => remove_value__
+     PROCEDURE, PUBLIC :: remove_if      => remove_if__
+     PROCEDURE, PUBLIC :: unique         => unique__
+     PROCEDURE, PUBLIC :: merge          => merge__
+     PROCEDURE, PUBLIC :: reverse        => reverse__
+     PROCEDURE, PUBLIC :: sort           => sort__
+
 
   END TYPE List
 
@@ -101,7 +151,7 @@ CONTAINS
   ! Constructs an empty container, WITH no elements.
   SUBROUTINE initialise_void__(t_this)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout), TARGET :: t_this
+    CLASS(List), INTENT(inout), TARGET :: t_this
     ! --- Executable Code ----------------------------------------------
     IF (ASSOCIATED(t_this%t_node_%tp_next_)) CALL list_clear(t_this)
     t_this%t_node_%tp_next_ => t_this%t_node_
@@ -112,9 +162,9 @@ CONTAINS
   ! Constructs a container filled with count values
   SUBROUTINE initialise_fill__(t_this,i_count,t_value)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout) :: t_this
-    INTEGER   , INTENT(in)    :: i_count
-    CLASS(*)  , INTENT(in)    :: t_value
+    CLASS(List), INTENT(inout) :: t_this
+    INTEGER    , INTENT(in)    :: i_count
+    CLASS(*)   , INTENT(in)    :: t_value
     ! --- Executable Code ----------------------------------------------
     CALL initialise_empty__(t_this)
     CALL insert_fill__(t_this%end(),i_count,t_value)
@@ -123,8 +173,8 @@ CONTAINS
   ! list_construct_range
   SUBROUTINE initialise_range__(t_this,t_first,t_last)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List)        , INTENT(inout) :: t_this
-    TYPE(ListIterator), INTENT(in)    :: t_first, t_last
+    CLASS(List)        , INTENT(inout) :: t_this
+    TYPE(ListIterator) , INTENT(in)    :: t_first, t_last
     ! --- Executable Code ----------------------------------------------
     CALL initialise_empty__(t_this)
     CALL insert_range__(t_this%end(),t_first,t_last)
@@ -132,8 +182,8 @@ CONTAINS
 
   SUBROUTINE initialise_copy__(t_this,t_that)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout) :: t_this
-    TYPE(List), INTENT(in)    :: t_that
+    CLASS(List), INTENT(inout) :: t_this
+    TYPE(List) , INTENT(in)    :: t_that
     ! --- Executable Code ----------------------------------------------
     CALL initialise_empty__(t_this)
     CALL insert_range__(t_this%end(),t_that%begin(),t_that%end())
@@ -141,9 +191,9 @@ CONTAINS
 
   SUBROUTINE finalise__(t_this)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout) :: t_this
+    CLASS(List), INTENT(inout) :: t_this
     ! --- Executable Code ----------------------------------------------
-    CALL list_clear(t_this)
+    CALL clear__(t_this)
   END SUBROUTINE finalise__
 
   !===================================================================
@@ -158,8 +208,8 @@ CONTAINS
   ! list_begin
   FUNCTION begin__(t_this) RESULT(iterator)
     ! --- Declaration of arguments -------------------------------------
-    CLASS(List), INTENT(in), TARGET :: t_this
-    TYPE(ListIterator)              :: iterator
+    CLASS(List)       , INTENT(in), TARGET :: t_this
+    TYPE(ListIterator)                     :: iterator
     ! --- Executable Code ----------------------------------------------
     iterator = ListIterator(t_this%t_node_%tp_next_)
   END FUNCTION begin__
@@ -167,8 +217,8 @@ CONTAINS
   ! list_end
   FUNCTION end__(t_this) RESULT(iterator)
     ! --- Declaration of arguments -------------------------------------
-    CLASS(List), INTENT(in), TARGET :: t_this
-    TYPE(ListIterator)              :: iterator
+    CLASS(List)       , INTENT(in), TARGET :: t_this
+    TYPE(ListIterator)                     :: iterator
     ! --- Executable Code ----------------------------------------------
     iterator = ListIterator(t_this%t_node_)
   END FUNCTION end__
@@ -241,7 +291,7 @@ CONTAINS
 
   SUBROUTINE assign_range__(t_this, t_first2, t_last2)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List)        , INTENT(inout) :: t_this
+    CLASS(List)       , INTENT(inout) :: t_this
     TYPE(ListIterator), VALUE         :: t_first2, t_last2
     ! --- Declaration of variables -------------------------------------
     TYPE(ListIterator)                :: t_first1, t_last1
@@ -266,11 +316,11 @@ CONTAINS
   ! val.
   SUBROUTINE assign_fill__(t_this,i_count,t_value)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout) :: t_this
-    INTEGER   , VALUE         :: i_count
-    CLASS(*)  , INTENT(in)    :: t_value
+    CLASS(List), INTENT(inout) :: t_this
+    INTEGER    , VALUE         :: i_count
+    CLASS(*)   , INTENT(in)    :: t_value
     ! --- Declaration of variables -------------------------------------
-    TYPE(ListIterator)        :: t_iterator
+    TYPE(ListIterator)         :: t_iterator
     ! --- Executable Code ----------------------------------------------
     t_iterator = t_this%begin()
 
@@ -288,8 +338,8 @@ CONTAINS
 
   SUBROUTINE assign_list__(t_this,t_that)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout) :: t_this
-    TYPE(List), INTENT(in)    :: t_that
+    CLASS(List), INTENT(inout) :: t_this
+    TYPE(List) , INTENT(in)    :: t_that
     ! --- Executable Code ----------------------------------------------
     CALL assign_range__(t_this,t_that%begin(),t_this%end())
   END SUBROUTINE assign_list__
@@ -390,8 +440,8 @@ CONTAINS
   ! input val   : TYPE(value_type)
   SUBROUTINE push_front__(t_this,t_value)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout) :: t_this
-    CLASS(*)  , INTENT(in)    :: t_value
+    CLASS(List), INTENT(inout) :: t_this
+    CLASS(*)   , INTENT(in)    :: t_value
     ! --- Executable Code ----------------------------------------------
     CALL insert_element__(t_this%begin(),t_value)
   END SUBROUTINE push_front__
@@ -400,12 +450,12 @@ CONTAINS
   ! Adds a new element at the end of the list container, after its
   ! current last element. The content of val is copied (or moved) to
   ! the new element.
-  ! input list  : TYPE(List)
+  ! input list  : CLASS(List)
   ! input val   : TYPE(value_type)
   SUBROUTINE push_back__(t_this,t_value)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout) :: t_this
-    CLASS(*)  , INTENT(in)    :: t_value
+    CLASS(List), INTENT(inout) :: t_this
+    CLASS(*)   , INTENT(in)    :: t_value
     ! --- Executable Code ----------------------------------------------
     CALL insert_element__(t_this%end(),t_value)
   END SUBROUTINE push_back__
@@ -413,12 +463,12 @@ CONTAINS
   ! list_pop_front
   ! Removes the first element in the list container, effectively
   ! reducing its size by one. T_this destroys the removed element.
-  ! input list : TYPE(List)
+  ! input list : CLASS(List)
   SUBROUTINE pop_front__(t_this)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout) :: t_this
+    CLASS(List), INTENT(inout) :: t_this
     ! --- Declaration of variables -------------------------------------
-    TYPE(ListIterator)        :: t_iterator
+    TYPE(ListIterator) :: t_iterator
     ! --- Executable Code ----------------------------------------------
     t_iterator = t_this%begin()
     CALL erase_element__(t_iterator)
@@ -427,12 +477,12 @@ CONTAINS
   ! list_pop_back
   ! Removes the last element in the list container, effectively
   ! reducing its size by one. This destroys the removed element.
-  ! input list : TYPE(List)
+  ! input list : CLASS(List)
   SUBROUTINE pop_back__(t_this)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout) :: t_this
+    CLASS(List), INTENT(inout) :: t_this
     ! --- Declaration of variables -------------------------------------
-    TYPE(ListIterator)        :: t_iterator
+    TYPE(ListIterator) :: t_iterator
     ! --- Executable Code ----------------------------------------------
     t_iterator = t_this%end()
     CALL t_iterator%prev()
@@ -442,11 +492,11 @@ CONTAINS
   ! list_clear
   ! Removes all elements from the list container (which are
   ! destroyed), and leaving the container with a size of 0.
-  ! input list : TYPE(List)
+  ! input list : CLASS(List)
 
   SUBROUTINE clear__(t_this)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout) :: t_this
+    CLASS(List), INTENT(inout) :: t_this
     ! --- Executable Code ----------------------------------------------
     CALL erase_range__(t_this%begin(),t_this%end())
   END SUBROUTINE clear__
@@ -460,7 +510,7 @@ CONTAINS
   ! the swapped objects.
   SUBROUTINE swap__(t_listx, t_listy)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout) :: t_listx, t_listy
+    CLASS(List), INTENT(inout) :: t_listx, t_listy
     ! --- Executable Code ----------------------------------------------
     CALL t_listx%t_node_%swap(t_listy%t_node_)
   END SUBROUTINE swap__
@@ -479,9 +529,9 @@ CONTAINS
 
   SUBROUTINE resize__(t_this,i_size,t_value)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout)           :: t_this
-    INTEGER   , INTENT(in)              :: i_size
-    CLASS(*)  , INTENT(in)   , OPTIONAL :: t_value
+    CLASS(List), INTENT(inout)           :: t_this
+    INTEGER    , INTENT(in)              :: i_size
+    CLASS(*)   , INTENT(in)   , OPTIONAL :: t_value
     ! --- Declaration of variables -------------------------------------
     TYPE(ListIterator) :: t_iterator
     INTEGER            :: i_counter
@@ -571,8 +621,8 @@ CONTAINS
   ! any way.  Managing the pointer is the user's responsibility.
   SUBROUTINE remove_value__(t_this,t_value,BinaryPredicate)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout), TARGET :: t_this
-    CLASS(*)  , INTENT(in)   , TARGET :: t_value
+    CLASS(List), INTENT(inout), TARGET :: t_this
+    CLASS(*)   , INTENT(in)   , TARGET :: t_value
     INTERFACE
        LOGICAL FUNCTION BinaryPredicate(x,y)
          CLASS(*), INTENT(in) :: x,y
@@ -616,7 +666,7 @@ CONTAINS
   ! responsibility.
   SUBROUTINE remove_if__(t_this,UnaryPredicate)
   ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout), TARGET :: t_this
+    CLASS(List), INTENT(inout), TARGET :: t_this
     INTERFACE
        LOGICAL FUNCTION UnaryPredicate(x)
          CLASS(*), INTENT(in) :: x
@@ -647,7 +697,7 @@ CONTAINS
   ! any way. Managing the pointer is the user's responsibility.
   SUBROUTINE unique__(t_this,BinaryPredicate)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout) :: t_this
+    CLASS(List), INTENT(inout) :: t_this
     INTERFACE
        LOGICAL FUNCTION BinaryPredicate(x,y)
          CLASS(*), INTENT(in) :: x,y
@@ -685,7 +735,7 @@ CONTAINS
 
   SUBROUTINE merge__(t_this, t_that, BinaryPredicate)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout) :: t_this, t_that
+    CLASS(List), INTENT(inout) :: t_this, t_that
     INTERFACE
        LOGICAL FUNCTION BinaryPredicate(x,y)
          CLASS(*), INTENT(in) :: x,y
@@ -723,7 +773,7 @@ CONTAINS
   ! Reverse the order of the list this
   SUBROUTINE reverse__(t_this)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout) :: t_this
+    CLASS(List), INTENT(inout) :: t_this
     ! --- Executable Code ----------------------------------------------
     CALL t_this%t_node_%reverse()
   END SUBROUTINE reverse__
@@ -749,7 +799,7 @@ CONTAINS
   ! Algorithm : n-way merge sort
   SUBROUTINE sort__(t_this,BinaryPredicate)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(List), INTENT(inout) :: t_this
+    CLASS(List), INTENT(inout) :: t_this
     INTERFACE
        LOGICAL FUNCTION BinaryPredicate(x,y)
          CLASS(*), INTENT(in) :: x,y

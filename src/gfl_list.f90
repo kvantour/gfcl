@@ -136,6 +136,7 @@ MODULE gfcl_list
 
      PROCEDURE, PUBLIC :: remove         => remove_value__
      PROCEDURE, PUBLIC :: remove_if      => remove_if__
+     PROCEDURE, PUBLIC :: remove_unalloc => remove_unallocated__
      PROCEDURE, PUBLIC :: unique         => unique__
      PROCEDURE, PUBLIC :: merge          => merge__
      PROCEDURE, PUBLIC :: reverse        => reverse__
@@ -688,6 +689,31 @@ CONTAINS
     END DO
   END SUBROUTINE remove_if__
 
+  ! Removes every element in the list for which the predicate
+  ! pred(elem) returns true.  Remaining elements stay in list order.
+  ! Note that this function only erases the elements, and that if
+  ! the elements themselves are pointers, the pointed-to memory is
+  ! not touched in any way.  Managing the pointer is the user's
+  ! responsibility.
+  SUBROUTINE remove_unallocated__(t_this)
+  ! --- Declaration of arguments -------------------------------------
+    CLASS(List), INTENT(inout), TARGET :: t_this
+    ! --- Declaration of variables -------------------------------------
+    TYPE(ListIterator) :: first,last,next
+    ! --- Executable Code ----------------------------------------------
+    first = t_this%begin()
+    last  = t_this%end()
+
+    DO WHILE (first /= last)
+       next = first
+       CALL next%next()
+       IF (.NOT. ALLOCATED(first%tp_node_%ta_data_)) THEN
+          CALL erase_element__(first)
+       END IF
+       first = next
+    END DO
+  END SUBROUTINE remove_unallocated__
+  
   ! For each consecutive set of elements [first,last) that satisfy
   ! pred(first,i) where i is an iterator in [first,last), remove all
   ! but the first from every consecutive group of equal elements in

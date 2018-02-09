@@ -49,6 +49,7 @@ MODULE gfcl_list
   IMPLICIT NONE
   !--- Private/public section ----------------------------------------
   PRIVATE
+  PUBLIC :: swap, size
   !--- Data types ----------------------------------------------------
 
   !=== linked list ===================================================
@@ -110,6 +111,8 @@ MODULE gfcl_list
                                             assign_fill__,  &
                                             assign_array__, &
                                             assign_range__
+     GENERIC  , PUBLIC :: ASSIGNMENT(=)  => assign_list__,  &
+                                            assign_array__
 
      PROCEDURE, NOPASS :: insert_element__
      PROCEDURE, NOPASS :: insert_fill__
@@ -147,11 +150,17 @@ MODULE gfcl_list
      PROCEDURE, PUBLIC :: merge          => merge__
      PROCEDURE, PUBLIC :: reverse        => reverse__
      PROCEDURE, PUBLIC :: sort           => sort__
-
-
   END TYPE List
 
-  !--- Interfaces ----------------------------------------------------               
+  !--- Interfaces ----------------------------------------------------
+  INTERFACE swap
+     MODULE PROCEDURE swap__
+  END INTERFACE swap
+
+  INTERFACE size
+     MODULE PROCEDURE size__
+  END INTERFACE size
+
 CONTAINS
 
   ! =================================================================
@@ -387,7 +396,7 @@ CONTAINS
     CLASS(List), INTENT(inout) :: t_this
     TYPE(List) , INTENT(in)    :: t_that
     ! --- Executable Code ----------------------------------------------
-    CALL assign_range__(t_this,t_that%begin(),t_this%end())
+    CALL assign_range__(t_this,t_that%begin(),t_that%end())
   END SUBROUTINE assign_list__
 
 
@@ -397,13 +406,13 @@ CONTAINS
   ! input val :: TYPE(value_type)
   SUBROUTINE insert_element__(t_position, t_value)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(ListIterator), INTENT(in)           :: t_position
-    CLASS(*)          , INTENT(in), OPTIONAL :: t_value
+    TYPE(ListIterator), INTENT(in) :: t_position
+    CLASS(*)          , INTENT(in) :: t_value
     ! --- Declaration of variables -------------------------------------
-    TYPE(ListNode)    , POINTER              :: tp_node
+    TYPE(ListNode)    , POINTER    :: tp_node
     ! --- Executable Code ----------------------------------------------
     ALLOCATE(tp_node)
-    IF (PRESENT(t_value)) CALL tp_node%set(t_value)
+    CALL tp_node%set(t_value)
     CALL tp_node%hook(t_position%tp_node_)
   END SUBROUTINE insert_element__
 

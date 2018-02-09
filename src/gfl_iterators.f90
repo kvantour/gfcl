@@ -5,11 +5,11 @@ MODULE gfcl_iterators
   ! its beginning towards its end.
 
   TYPE, ABSTRACT :: ForwardIterator
-     INTEGER, ALLOCATABLE :: ICE_dummy
+!     INTEGER, ALLOCATABLE :: ICE_dummy
    CONTAINS
      PRIVATE
      PROCEDURE(op1_fi), DEFERRED, PASS :: equal_
-     PROCEDURE(op1_fi), DEFERRED, PASS :: notequal_
+     PROCEDURE(op1_fi), DEFERRED, PUBLIC, PASS :: notequal_
      PROCEDURE(op2_fi), DEFERRED, PASS :: next_
 
      PROCEDURE(op3_fi), DEFERRED, PASS, PUBLIC :: get

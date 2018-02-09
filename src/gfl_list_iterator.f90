@@ -15,41 +15,49 @@ MODULE gfcl_list_iterator
      TYPE(ListNode), POINTER :: tp_node_ => NULL()
      
    CONTAINS
-     !--- Type-bound-procedure part
      PRIVATE
+     !--- Type-bound-procedure part
+     ! initialisors ====================================================
+     PROCEDURE         :: initialise_void__
+     PROCEDURE         :: initialise_copy__
+     GENERIC  , PUBLIC :: initialise       => initialise_void__, &
+                                              initialise_copy__
+
+     ! comparators =====================================================
      PROCEDURE :: equal_    => equal__
      PROCEDURE :: notequal_ => notequal__
+
+     ! modifiers =======================================================
      PROCEDURE :: next_     => next__
      PROCEDURE :: prev_     => prev__
 
-
-     PROCEDURE :: initial_void_ => initial_void__
-     PROCEDURE :: initial_copy_ => initial_copy__
-     
      PROCEDURE, PUBLIC :: get     => get__
      PROCEDURE, PUBLIC :: set     => set__
-     GENERIC  , PUBLIC :: initial => initial_void_, initial_copy_
   END TYPE ListIterator
 
-  !--- Interfaces ----------------------------------------------------               
+  !--- Interfaces ------------------------------------------------------
+  INTERFACE ASSIGNMENT(=)
+     MODULE PROCEDURE assign, assign_node
+  END INTERFACE
+
 CONTAINS
 
   ! creates an empty iterator
-  SUBROUTINE initial_void__(t_this)
+  SUBROUTINE initialise_void__(t_this)
     ! --- Declaration of arguments -------------------------------------
     CLASS(ListIterator), INTENT(inout) :: t_this
     ! --- Executable Code ----------------------------------------------
     NULLIFY(t_this%tp_node_)
-  END SUBROUTINE initial_void__
+  END SUBROUTINE initialise_void__
 
   ! creates a copy from an iterator
-  SUBROUTINE initial_copy__(t_this,t_that)
+  SUBROUTINE initialise_copy__(t_this,t_that)
     ! --- Declaration of arguments -------------------------------------
     CLASS(ListIterator), INTENT(inout)         :: t_this
     CLASS(ListIterator), INTENT(in)   , TARGET :: t_that
     ! --- Executable Code ----------------------------------------------
     t_this%tp_node_ => t_that%tp_node_
-  END SUBROUTINE initial_copy__
+  END SUBROUTINE initialise_copy__
 
   SUBROUTINE final__(t_this)
     ! --- Declaration of arguments -------------------------------------
@@ -149,7 +157,7 @@ CONTAINS
     ! --- Declaration of arguments -------------------------------------
     TYPE(ListIterator), INTENT(inout) :: t_this,t_first,t_last
     ! --- Executable Code ----------------------------------------------
-    CALL list_node_transfer(t_this%tp_node_,t_first%tp_node_,t_last%tp_node_)
+    CALL t_this%tp_node_%transfer(t_first%tp_node_,t_last%tp_node_)
   END SUBROUTINE transfer
   
   ! distance

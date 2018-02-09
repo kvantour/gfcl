@@ -49,7 +49,6 @@ MODULE gfcl_list
   IMPLICIT NONE
   !--- Private/public section ----------------------------------------
   PRIVATE
-
   !--- Data types ----------------------------------------------------
 
   !=== linked list ===================================================
@@ -74,7 +73,7 @@ MODULE gfcl_list
   ! referencing D, not A!  To get to the head of the list, we start at
   ! the tail and move forward by one. When this member iterator's
   ! next/previous pointers refer to itself, the list is empty.
-  TYPE :: List
+  TYPE, PUBLIC :: List
      !--- Component part
      PRIVATE
      TYPE(ListNode) :: t_node_
@@ -86,11 +85,14 @@ MODULE gfcl_list
      PROCEDURE         :: initialise_void__
      PROCEDURE         :: initialise_copy__
      PROCEDURE         :: initialise_fill__
+     PROCEDURE         :: initialise_array__
      PROCEDURE         :: initialise_range__
-     GENERIC  , PUBLIC :: initialise     => initialise_void__, &
-                                            initialise_copy__, &
-                                            initialise_fill__, &
+     GENERIC  , PUBLIC :: initialise     => initialise_void__,  &
+                                            initialise_copy__,  &
+                                            initialise_fill__,  &
+                                            initialise_array__, &
                                             initialise_range__
+
      ! iterators =======================================================
      PROCEDURE, PUBLIC :: begin          => begin__
      PROCEDURE, PUBLIC :: end            => end__
@@ -102,16 +104,20 @@ MODULE gfcl_list
      ! modifiers =======================================================
      PROCEDURE         :: assign_list__
      PROCEDURE         :: assign_fill__
+     PROCEDURE         :: assign_array__
      PROCEDURE         :: assign_range__
-     GENERIC  , PUBLIC :: assign         => assign_list__, &
-                                            assign_fill__, &
+     GENERIC  , PUBLIC :: assign         => assign_list__,  &
+                                            assign_fill__,  &
+                                            assign_array__, &
                                             assign_range__
 
      PROCEDURE, NOPASS :: insert_element__
      PROCEDURE, NOPASS :: insert_fill__
+     PROCEDURE, NOPASS :: insert_array__
      PROCEDURE, NOPASS :: insert_range__
      GENERIC  , PUBLIC :: insert         => insert_element__, &
                                             insert_fill__,    &
+                                            insert_array__,   &
                                             insert_range__
 
      PROCEDURE, NOPASS :: erase_element__
@@ -148,13 +154,17 @@ MODULE gfcl_list
   !--- Interfaces ----------------------------------------------------               
 CONTAINS
 
+  ! =================================================================
+  ! Initialisation and finalisation section
+  ! =================================================================
+
   ! initialise_empty__
-  ! Constructs an empty container, WITH no elements.
+  ! Constructs an empty container, with no elements.
   SUBROUTINE initialise_void__(t_this)
     ! --- Declaration of arguments -------------------------------------
     CLASS(List), INTENT(inout), TARGET :: t_this
     ! --- Executable Code ----------------------------------------------
-    IF (ASSOCIATED(t_this%t_node_%tp_next_)) CALL list_clear(t_this)
+    IF (ASSOCIATED(t_this%t_node_%tp_next_)) CALL clear__(t_this)
     t_this%t_node_%tp_next_ => t_this%t_node_
     t_this%t_node_%tp_prev_ => t_this%t_node_
   END SUBROUTINE initialise_void__
@@ -167,9 +177,18 @@ CONTAINS
     INTEGER    , INTENT(in)    :: i_count
     CLASS(*)   , INTENT(in)    :: t_value
     ! --- Executable Code ----------------------------------------------
-    CALL initialise_empty__(t_this)
+    CALL initialise_void__(t_this)
     CALL insert_fill__(t_this%end(),i_count,t_value)
   END SUBROUTINE initialise_fill__
+
+  SUBROUTINE initialise_array__(t_this,td_array)
+    ! --- Declaration of arguments -------------------------------------
+    CLASS(List),               INTENT(inout) :: t_this
+    CLASS(*)   , DIMENSION(:), INTENT(in)    :: td_array
+    ! --- Executable Code ----------------------------------------------
+    CALL initialise_void__(t_this)
+    CALL insert_array__(t_this%end(),td_array)
+  END SUBROUTINE initialise_array__
 
   ! list_construct_range
   SUBROUTINE initialise_range__(t_this,t_first,t_last)
@@ -177,7 +196,7 @@ CONTAINS
     CLASS(List)        , INTENT(inout) :: t_this
     TYPE(ListIterator) , INTENT(in)    :: t_first, t_last
     ! --- Executable Code ----------------------------------------------
-    CALL initialise_empty__(t_this)
+    CALL initialise_void__(t_this)
     CALL insert_range__(t_this%end(),t_first,t_last)
   END SUBROUTINE initialise_range__
 
@@ -186,7 +205,7 @@ CONTAINS
     CLASS(List), INTENT(inout) :: t_this
     TYPE(List) , INTENT(in)    :: t_that
     ! --- Executable Code ----------------------------------------------
-    CALL initialise_empty__(t_this)
+    CALL initialise_void__(t_this)
     CALL insert_range__(t_this%end(),t_that%begin(),t_that%end())
   END SUBROUTINE initialise_copy__
 
@@ -337,6 +356,32 @@ CONTAINS
     END IF
   END SUBROUTINE assign_fill__
 
+  ! list_assign_array
+  ! the new contents are the elements of an array
+  SUBROUTINE assign_array__(this,array)
+    ! --- Declaration of arguments -------------------------------------
+    CLASS(List),               INTENT(inout) :: this
+    CLASS(*)   , DIMENSION(:), INTENT(in)    :: array
+    ! --- Declaration of variables -------------------------------------
+    TYPE(ListIterator)                       :: first,last
+    INTEGER                                  :: start,stop
+    ! --- Executable Code ----------------------------------------------
+    first = this%begin(); last=this%end();
+    start = 1           ; stop=size(array) + 1
+
+    DO WHILE(first /= last .AND. start /= stop)
+       CALL first%set( array(start) )
+       CALL first%next()
+       start=start+1
+    END DO
+    IF (start == stop) THEN
+       CALL erase_range__(first,last)
+    ELSE
+       CALL insert_array_range__(last,array,start,stop)
+    END IF
+  END SUBROUTINE assign_array__
+
+
   SUBROUTINE assign_list__(t_this,t_that)
     ! --- Declaration of arguments -------------------------------------
     CLASS(List), INTENT(inout) :: t_this
@@ -369,25 +414,51 @@ CONTAINS
   ! input val :: TYPE(value_type)
   SUBROUTINE insert_fill__(t_position,i_count,t_value)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(ListIterator), INTENT(in)           :: t_position
-    INTEGER           , VALUE                :: i_count
-    CLASS(*)          , INTENT(in), OPTIONAL :: t_value
+    TYPE(ListIterator), INTENT(in) :: t_position
+    INTEGER           , VALUE      :: i_count
+    CLASS(*)          , INTENT(in) :: t_value
     ! --- Executable Code ----------------------------------------------
     ! we do not need to increment pos as the new element remains
     ! pointing at the same node and all elements are inserted
     ! before that on.
-    IF (PRESENT(t_value)) THEN
-       DO WHILE (i_count > 0)
-          CALL insert_element__(t_position, t_value)
-          i_count = i_count - 1
-       END DO
-    ELSE
-       DO WHILE (i_count > 0)
-          CALL insert_element__(t_position)
-          i_count = i_count - 1
-       END DO
-    END IF
+    DO WHILE (i_count > 0)
+       CALL insert_element__(t_position, t_value)
+       i_count = i_count - 1
+    END DO
   END SUBROUTINE insert_fill__
+
+  ! list_insert_array
+  ! Adds n times the value val before position pos
+  ! input pos :: iterator
+  ! input n   :: integer
+  ! input val :: TYPE(value_type)
+  SUBROUTINE insert_array_range__(position, array, start, stop)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(ListIterator),               INTENT(in) :: position
+    CLASS(*)          , DIMENSION(:), INTENT(in) :: array
+    INTEGER           , VALUE                    :: start, stop
+    ! --- Executable Code ----------------------------------------------
+    DO WHILE (start /= stop)
+       CALL insert_element__(position,array(start))
+       start = start + 1
+    END DO
+  END SUBROUTINE insert_array_range__
+
+  ! list_insert_array
+  ! Adds n times the value val before position pos
+  ! input pos :: iterator
+  ! input n   :: integer
+  ! input val :: TYPE(value_type)
+  SUBROUTINE insert_array__(position, array)
+    ! --- Declaration of arguments -------------------------------------
+    TYPE(ListIterator),               INTENT(in) :: position
+    CLASS(*)          , DIMENSION(:), INTENT(in) :: array
+    ! --- Executable Code ----------------------------------------------
+    ! we do not need to increment pos as the new element remains
+    ! pointing at the same node and all elements are inserted
+    ! before that one.
+    CALL insert_array_range__(position,array,1,SIZE(array)+1)
+  END SUBROUTINE insert_array__
 
   ! list_insert_range
   ! Adds the elements from [first,last) before pos
@@ -518,21 +589,19 @@ CONTAINS
 
   ! list_resize
   ! Resizes the container so that it contains n elements. If n is
-  ! smaller than the current container size, the content is reduced
-  ! to its first n elements, removing those beyond (and destroying
+  ! smaller than the current container size, the content is reduced to
+  ! its first n elements, removing those beyond (and destroying
   ! them). If n is greater than the current container size, the
   ! content is expanded by inserting at the end as many elements as
-  ! needed to reach a size of n. If val is specified, the new
-  ! elements are initialized as copies of val, otherwise, they are
-  ! value-initialized. Notice that this function changes the actual
-  ! content of the container by inserting or erasing elements from
-  ! it.
+  ! needed to reach a size of n. Notice that this function changes the
+  ! actual content of the container by inserting or erasing elements
+  ! from it.
 
   SUBROUTINE resize__(t_this,i_size,t_value)
     ! --- Declaration of arguments -------------------------------------
-    CLASS(List), INTENT(inout)           :: t_this
-    INTEGER    , INTENT(in)              :: i_size
-    CLASS(*)   , INTENT(in)   , OPTIONAL :: t_value
+    CLASS(List), INTENT(inout) :: t_this
+    INTEGER    , INTENT(in)    :: i_size
+    CLASS(*)   , INTENT(in)    :: t_value
     ! --- Declaration of variables -------------------------------------
     TYPE(ListIterator) :: t_iterator
     INTEGER            :: i_counter
@@ -547,11 +616,7 @@ CONTAINS
     IF (i_counter == i_size) THEN
        CALL erase_range__(t_iterator,t_this%end())
     ELSE
-       IF (PRESENT(t_value)) THEN
-          CALL insert_fill__(t_iterator,i_size - i_counter,t_value)
-       ELSE
-          CALL insert_fill__(t_iterator,i_size - i_counter)
-       END IF
+       CALL insert_fill__(t_iterator,i_size - i_counter,t_value)
     END IF
   END SUBROUTINE resize__
 
@@ -834,7 +899,7 @@ CONTAINS
     ! --- Declaration of variables -------------------------------------
     TYPE(List)                :: carry
     TYPE(List), DIMENSION(64) :: tmp
-    INTEGER :: fill, counter, i
+    INTEGER                   :: fill, counter, i
     ! --- Executable Code ----------------------------------------------
     CALL initialise_void__(carry)
     DO i = 1,64

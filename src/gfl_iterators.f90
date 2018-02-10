@@ -1,4 +1,7 @@
 MODULE gfcl_iterators
+  !--- Implicit statement --------------------------------------------
+  IMPLICIT NONE
+  !--- Data types ----------------------------------------------------
 
   ! Forward iterators are iterators that can be used to access the
   ! sequence of elements in a range in the direction that goes from
@@ -8,8 +11,8 @@ MODULE gfcl_iterators
 !     INTEGER, ALLOCATABLE :: ICE_dummy
    CONTAINS
      PRIVATE
-     PROCEDURE(op1_fi), DEFERRED, PASS :: equal_
-     PROCEDURE(op1_fi), DEFERRED, PUBLIC, PASS :: notequal_
+     PROCEDURE(op1_fi), DEFERRED, PASS, PUBLIC :: equal_
+     PROCEDURE(op1_fi), DEFERRED, PASS, PUBLIC :: notequal_
      PROCEDURE(op2_fi), DEFERRED, PASS :: next_
 
      PROCEDURE(op3_fi), DEFERRED, PASS, PUBLIC :: get

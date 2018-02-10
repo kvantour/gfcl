@@ -1,40 +1,40 @@
-MODULE gfcl_iterators
+module gfcl_iterators
   !--- Implicit statement --------------------------------------------
-  IMPLICIT NONE
+  implicit none
   !--- Data types ----------------------------------------------------
 
   ! Forward iterators are iterators that can be used to access the
   ! sequence of elements in a range in the direction that goes from
   ! its beginning towards its end.
 
-  TYPE, ABSTRACT :: ForwardIterator
+  type, abstract :: ForwardIterator
 !     INTEGER, ALLOCATABLE :: ICE_dummy
-   CONTAINS
-     PRIVATE
-     PROCEDURE(op1_fi), DEFERRED, PASS, PUBLIC :: equal_
-     PROCEDURE(op1_fi), DEFERRED, PASS, PUBLIC :: notequal_
-     PROCEDURE(op2_fi), DEFERRED, PASS :: next_
+   contains
+     private
+     procedure(op1_fi), deferred, pass, public :: equal_
+     procedure(op1_fi), deferred, pass, public :: notequal_
+     procedure(op2_fi), deferred, pass :: next_
 
-     PROCEDURE(op3_fi), DEFERRED, PASS, PUBLIC :: get
-     PROCEDURE(op4_fi), DEFERRED, PASS, PUBLIC :: set
+     procedure(op3_fi), deferred, pass, public :: get
+     procedure(op4_fi), deferred, pass, public :: set
 
-     GENERIC, PUBLIC :: OPERATOR(==) => equal_
-     GENERIC, PUBLIC :: OPERATOR(/=) => notequal_
+     generic, public :: operator(==) => equal_
+     generic, public :: operator(/=) => notequal_
 
-     GENERIC, PUBLIC :: next => next_
-  END TYPE ForwardIterator
+     generic, public :: next => next_
+  end type ForwardIterator
 
   ! Bidirectional iterators are iterators that can be used to access
   ! the SEQUENCE of elements in a range in both directions (towards
   ! the END and towards the beginning).
 
-  TYPE, EXTENDS(ForwardIterator), ABSTRACT :: BidirectionalIterator
-   CONTAINS
-     PRIVATE
-     PROCEDURE(op2_bi), DEFERRED, PASS :: prev_
+  type, extends(ForwardIterator), abstract :: BidirectionalIterator
+   contains
+     private
+     procedure(op2_bi), deferred, pass :: prev_
 
-     GENERIC, PUBLIC :: prev => prev_
-  END TYPE BidirectionalIterator
+     generic, public :: prev => prev_
+  end type BidirectionalIterator
 
   ! Random-access iterators are iterators that can be used to access
   ! elements at an arbitrary offset position relative to the element
@@ -43,135 +43,135 @@ MODULE gfcl_iterators
   ! Random-access iterators are the most complete iterators in terms
   ! of functionality.
 
-  TYPE, EXTENDS(BidirectionalIterator), ABSTRACT :: RandomAccessIterator
+  type, extends(BidirectionalIterator), abstract :: RandomAccessIterator
 
-   CONTAINS
-     PRIVATE
-     PROCEDURE(op1_ri), DEFERRED, PASS(t_this) :: lower_than_
-     PROCEDURE(op1_ri), DEFERRED, PASS(t_this) :: lower_than_equal_
-     PROCEDURE(op1_ri), DEFERRED, PASS(t_this) :: greater_than_
-     PROCEDURE(op1_ri), DEFERRED, PASS(t_this) :: greater_than_equal_
+   contains
+     private
+     procedure(op1_ri), deferred, pass(t_this) :: lower_than_
+     procedure(op1_ri), deferred, pass(t_this) :: lower_than_equal_
+     procedure(op1_ri), deferred, pass(t_this) :: greater_than_
+     procedure(op1_ri), deferred, pass(t_this) :: greater_than_equal_
 
-     PROCEDURE(op2_ri), DEFERRED, PASS(t_this) :: next_
-     PROCEDURE(op2_ri), DEFERRED, PASS(t_this) :: prev_
+     procedure(op2_ri), deferred, pass(t_this) :: next_
+     procedure(op2_ri), deferred, pass(t_this) :: prev_
 
-     PROCEDURE(op3_ri), DEFERRED, PASS(t_this) :: add_integer_
-     PROCEDURE(op3_ri), DEFERRED, PASS(t_this) :: subtract_integer_
-     PROCEDURE(op4_ri), DEFERRED, PASS(t_this) :: add_integer_pre_
+     procedure(op3_ri), deferred, pass(t_this) :: add_integer_
+     procedure(op3_ri), deferred, pass(t_this) :: subtract_integer_
+     procedure(op4_ri), deferred, pass(t_this) :: add_integer_pre_
 
-     PROCEDURE(op5_ri), DEFERRED, PASS(t_this) :: subtract_iterator_
+     procedure(op5_ri), deferred, pass(t_this) :: subtract_iterator_
 
-     GENERIC, PUBLIC :: OPERATOR(<)  => lower_than_
-     GENERIC, PUBLIC :: OPERATOR(<=) => lower_than_equal_
-     GENERIC, PUBLIC :: OPERATOR(>)  => greater_than_
-     GENERIC, PUBLIC :: OPERATOR(>=) => greater_than_equal_
+     generic, public :: operator(<)  => lower_than_
+     generic, public :: operator(<=) => lower_than_equal_
+     generic, public :: operator(>)  => greater_than_
+     generic, public :: operator(>=) => greater_than_equal_
 
-     GENERIC, PUBLIC :: next => add_integer_
-     GENERIC, PUBLIC :: prev => subtract_integer_
+     generic, public :: next => add_integer_
+     generic, public :: prev => subtract_integer_
      
-  END TYPE RandomAccessIterator
+  end type RandomAccessIterator
 
 
-  ABSTRACT INTERFACE
+  abstract interface
 
-     FUNCTION op1_fi(t_this, t_that) RESULT(b)
-       IMPORT :: ForwardIterator
-       CLASS(ForwardIterator), INTENT(in) :: t_this, t_that
-       LOGICAL                            :: b
-     END FUNCTION op1_fi
+     function op1_fi(t_this, t_that) result(b)
+       import :: ForwardIterator
+       class(ForwardIterator), intent(in) :: t_this, t_that
+       logical                            :: b
+     end function op1_fi
 
-     SUBROUTINE op2_fi(t_this)
-       IMPORT :: ForwardIterator
-       CLASS(ForwardIterator), INTENT(inout)  :: t_this
-     END SUBROUTINE op2_fi
+     subroutine op2_fi(t_this)
+       import :: ForwardIterator
+       class(ForwardIterator), intent(inout)  :: t_this
+     end subroutine op2_fi
 
-     FUNCTION op3_fi(t_this) RESULT(tp_value)
-       IMPORT :: ForwardIterator
-       CLASS(ForwardIterator), INTENT(in) :: t_this
-       CLASS(*),               POINTER    :: tp_value
-     END FUNCTION op3_fi
+     function op3_fi(t_this) result(tp_value)
+       import :: ForwardIterator
+       class(ForwardIterator), intent(in) :: t_this
+       class(*),               pointer    :: tp_value
+     end function op3_fi
 
-     SUBROUTINE op4_fi(t_this,t_value)
-       IMPORT :: ForwardIterator
-       CLASS(ForwardIterator), INTENT(inout) :: t_this
-       CLASS(*),               INTENT(in)    :: t_value
-     END SUBROUTINE op4_fi
+     subroutine op4_fi(t_this,t_value)
+       import :: ForwardIterator
+       class(ForwardIterator), intent(inout) :: t_this
+       class(*),               intent(in)    :: t_value
+     end subroutine op4_fi
 
-     FUNCTION op1_bi(t_this, t_that) RESULT(b)
-       IMPORT :: BidirectionalIterator
-       CLASS(BidirectionalIterator), INTENT(in) :: t_this, t_that
-       LOGICAL                             :: b
-     END FUNCTION op1_bi
+     function op1_bi(t_this, t_that) result(b)
+       import :: BidirectionalIterator
+       class(BidirectionalIterator), intent(in) :: t_this, t_that
+       logical                             :: b
+     end function op1_bi
      
-     SUBROUTINE op2_bi(t_this)
-       IMPORT :: BidirectionalIterator
-       CLASS(BidirectionalIterator), INTENT(inout)  :: t_this
-     END SUBROUTINE op2_bi
+     subroutine op2_bi(t_this)
+       import :: BidirectionalIterator
+       class(BidirectionalIterator), intent(inout)  :: t_this
+     end subroutine op2_bi
 
 
 
-     FUNCTION op1_ri(t_this, t_that) RESULT(b)
-       IMPORT :: RandomAccessIterator
-       CLASS(RandomAccessIterator), INTENT(in) :: t_this, t_that
-       LOGICAL                                 :: b
-     END FUNCTION op1_ri
+     function op1_ri(t_this, t_that) result(b)
+       import :: RandomAccessIterator
+       class(RandomAccessIterator), intent(in) :: t_this, t_that
+       logical                                 :: b
+     end function op1_ri
 
-     SUBROUTINE op2_ri(t_this)
-       IMPORT :: RandomAccessIterator
-       CLASS(RandomAccessIterator), INTENT(inout)  :: t_this
-     END SUBROUTINE op2_ri
+     subroutine op2_ri(t_this)
+       import :: RandomAccessIterator
+       class(RandomAccessIterator), intent(inout)  :: t_this
+     end subroutine op2_ri
 
-     SUBROUTINE op3_ri(t_this, n)
-       IMPORT :: RandomAccessIterator
-       CLASS(RandomAccessIterator), INTENT(inout)  :: t_this
-       INTEGER                    , INTENT(in)     :: n
-     END SUBROUTINE op3_ri
+     subroutine op3_ri(t_this, n)
+       import :: RandomAccessIterator
+       class(RandomAccessIterator), intent(inout)  :: t_this
+       integer                    , intent(in)     :: n
+     end subroutine op3_ri
 
-     FUNCTION op4_ri(n, t_this) RESULT(itr)
-       IMPORT :: RandomAccessIterator
-       CLASS(RandomAccessIterator), INTENT(in)  :: t_this
-       INTEGER                    , INTENT(in)  :: n
-       CLASS(RandomAccessIterator), ALLOCATABLE :: itr
-     END FUNCTION op4_ri
+     function op4_ri(n, t_this) result(itr)
+       import :: RandomAccessIterator
+       class(RandomAccessIterator), intent(in)  :: t_this
+       integer                    , intent(in)  :: n
+       class(RandomAccessIterator), allocatable :: itr
+     end function op4_ri
      
-     FUNCTION op5_ri(t_this, t_that) RESULT(itr)
-       IMPORT :: RandomAccessIterator
-       CLASS(RandomAccessIterator), INTENT(in)  :: t_this, t_that
-       CLASS(RandomAccessIterator), ALLOCATABLE :: itr
-     END FUNCTION op5_ri
-  END INTERFACE
+     function op5_ri(t_this, t_that) result(itr)
+       import :: RandomAccessIterator
+       class(RandomAccessIterator), intent(in)  :: t_this, t_that
+       class(RandomAccessIterator), allocatable :: itr
+     end function op5_ri
+  end interface
 
-CONTAINS
+contains
 
-  SUBROUTINE advance(forward_iterator,n)
+  subroutine advance(forward_iterator,n)
     ! --- Declaration of arguments -------------------------------------
-    CLASS(ForwardIterator), INTENT(inout) :: forward_iterator
-    INTEGER, VALUE                        :: n
+    class(ForwardIterator), intent(inout) :: forward_iterator
+    integer, value                        :: n
     ! --- executable code ----------------------------------------------
-    SELECT TYPE(forward_iterator)
-    CLASS IS (RandomAccessIterator)
-       CALL forward_iterator%next(n)
-    CLASS IS (BidirectionalIterator)
-       IF (n > 0) THEN
-          DO WHILE (n /= 0)
-              CALL forward_iterator%next()
+    select type(forward_iterator)
+    class IS (RandomAccessIterator)
+       call forward_iterator%next(n)
+    class IS (BidirectionalIterator)
+       if (n > 0) then
+          do while (n /= 0)
+              call forward_iterator%next()
              n = n-1
-          END DO
-       ELSE
-          DO WHILE (n /= 0)
-             CALL forward_iterator%next()
+          end do
+       else
+          do while (n /= 0)
+             call forward_iterator%next()
              n = n+1
-          END DO
-       END IF
-    CLASS IS (ForwardIterator)
-       IF (n < 0) ERROR STOP "forward_iterator can only advance forward"
-       DO WHILE (n /= 0)
-          CALL forward_iterator%next()
+          end do
+       end if
+    class IS (ForwardIterator)
+       if (n < 0) ERROR stop "forward_iterator can only advance forward"
+       do while (n /= 0)
+          call forward_iterator%next()
           n = n-1
-       END DO
-    END SELECT
-  END SUBROUTINE advance
+       end do
+    end select
+  end subroutine advance
 
 
   
-END MODULE gfcl_iterators
+end module gfcl_iterators

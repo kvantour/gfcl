@@ -1,77 +1,77 @@
-MODULE gfcl_list_node
+module gfcl_list_node
   !--- USE statements ------------------------------------------------
   !--- Implicit statement --------------------------------------------
-  IMPLICIT NONE
+  implicit none
   !--- Private/public section ----------------------------------------
-  PRIVATE
+  private
   !--- Data types ----------------------------------------------------
   ! An actual list node, containing the list element, and pointers to
   ! the previous and next node in the list.
-  TYPE, PUBLIC :: ListNode
+  type, public :: ListNode
      !--- Component part
-     CLASS(*)       , ALLOCATABLE :: ta_data_
-     CLASS(ListNode), POINTER     :: tp_next_ => NULL()
-     CLASS(ListNode), POINTER     :: tp_prev_ => NULL()
+     class(*)       , allocatable :: ta_data_
+     class(ListNode), pointer     :: tp_next_ => null()
+     class(ListNode), pointer     :: tp_prev_ => null()
 
-   CONTAINS
+   contains
      !--- Type-bound-procedure part
-     PROCEDURE :: hook     => hook__
-     PROCEDURE :: unhook   => unhook__
-     PROCEDURE :: swap     => swap__
-     PROCEDURE :: transfer => transfer__
-     PROCEDURE :: reverse  => reverse__
+     procedure :: hook     => hook__
+     procedure :: unhook   => unhook__
+     procedure :: swap     => swap__
+     procedure :: transfer => transfer__
+     procedure :: reverse  => reverse__
 
-     PROCEDURE :: next => next__
-     PROCEDURE :: prev => prev__
-     PROCEDURE :: get  => get__
-     PROCEDURE :: set  => set__
+     procedure :: next => next__
+     procedure :: prev => prev__
+     procedure :: get  => get__
+     procedure :: set  => set__
 
-     FINAL :: final___
-  END TYPE ListNode
+     final :: final___
+  end type ListNode
   !--- Interfaces ----------------------------------------------------               
-CONTAINS
+contains
 
-  SUBROUTINE hook__(t_node1, t_node2)
+  subroutine hook__(t_node1, t_node2)
     ! --- Declaration of arguments -------------------------------------
-    CLASS(ListNode), INTENT(inout),TARGET :: t_node1, t_node2
+    class(ListNode), intent(inout),target :: t_node1, t_node2
     ! --- Executable Code ----------------------------------------------
     t_node1%tp_next_          => t_node2
     t_node1%tp_prev_          => t_node2%tp_prev_
     t_node2%tp_prev_%tp_next_ => t_node1
     t_node2%tp_prev_          => t_node1
-  END SUBROUTINE hook__
+  end subroutine hook__
 
   ! remove node from cyclic linked list
-  SUBROUTINE unhook__(t_node)
+  subroutine unhook__(t_node)
     ! --- Declaration of arguments -------------------------------------
-    CLASS(ListNode), INTENT(inout) :: t_node
+    class(ListNode), intent(inout) :: t_node
     ! --- Declaration of variables -------------------------------------
-    CLASS(ListNode), POINTER :: tp_next, tp_prev
+    class(ListNode), pointer :: tp_next, tp_prev
     ! --- Executable Code ----------------------------------------------
     ! remove links
     tp_next          => t_node%tp_next_
     tp_prev          => t_node%tp_prev_
     tp_prev%tp_next_ => tp_next
     tp_next%tp_prev_ => tp_prev
-  END SUBROUTINE unhook__
+  end subroutine unhook__
 
-  SUBROUTINE construct_node__(t_node,t_value)
+  subroutine construct_node__(t_node,t_value)
     ! --- Declaration of arguments -------------------------------------
-    CLASS(ListNode) , INTENT(inout) :: t_node
-    CLASS(*)        , INTENT(in)    :: t_value
+    class(ListNode) , intent(inout) :: t_node
+    class(*)        , intent(in)    :: t_value
     ! --- Executable Code ----------------------------------------------
-    IF (ALLOCATED(t_node%ta_data_)) DEALLOCATE(t_node%ta_data_)
-    ALLOCATE(t_node%ta_data_,source=t_value)
-  END SUBROUTINE construct_node__
+    if (allocated(t_node%ta_data_)) deallocate(t_node%ta_data_)
+    allocate(t_node%ta_data_,source=t_value)
+  end subroutine construct_node__
 
-  SUBROUTINE swap__(t_node1,t_node2)
+  subroutine swap__(t_node1,t_node2)
     ! --- Declaration of arguments -------------------------------------
-    CLASS(ListNode), INTENT(inout), TARGET :: t_node1,t_node2
+    class(ListNode), intent(inout), target :: t_node1,t_node2
     ! --- Declaration of variables -------------------------------------
-    CLASS(ListNode), POINTER :: tp
+    class(ListNode), pointer :: tp
     ! --- Executable Code ----------------------------------------------
-    IF (.NOT.ASSOCIATED(t_node1%tp_next_,t_node1)) THEN
-       IF (.NOT.ASSOCIATED(t_node2%tp_next_,t_node2)) THEN
+    if (.not.associated(t_node1%tp_next_,t_node1)) then
+       if (.not.associated(t_node2%tp_next_,t_node2)) then
           ! both t_node1 and y are not empty
           tp               => t_node1%tp_next_
           t_node1%tp_next_ => t_node2%tp_next_
@@ -84,7 +84,7 @@ CONTAINS
           t_node1%tp_prev_%tp_next_ => t_node1
           t_node2%tp_next_%tp_prev_ => t_node2
           t_node2%tp_prev_%tp_next_ => t_node2
-       ELSE
+       else
           ! x not empty, y is
           t_node2%tp_next_ => t_node1%tp_next_
           t_node2%tp_prev_ => t_node1%tp_prev_
@@ -94,8 +94,8 @@ CONTAINS
 
           t_node1%tp_next_ => t_node1
           t_node1%tp_prev_ => t_node1
-       END IF
-    ELSE IF (.NOT.ASSOCIATED(t_node2%tp_next_,t_node2)) THEN
+       end if
+    else if (.not.associated(t_node2%tp_next_,t_node2)) then
        ! x is empty, y is not
        t_node1%tp_next_          => t_node2%tp_next_
        t_node1%tp_prev_          => t_node2%tp_prev_
@@ -103,16 +103,16 @@ CONTAINS
        t_node1%tp_prev_%tp_next_ => t_node1
        t_node2%tp_next_          => t_node2
        t_node2%tp_prev_          => t_node2
-    END IF
-  END SUBROUTINE swap__
+    end if
+  end subroutine swap__
 
-  SUBROUTINE transfer__(t_node,t_first,t_last)
+  subroutine transfer__(t_node,t_first,t_last)
     ! --- Declaration of arguments -------------------------------------
-    CLASS(ListNode), INTENT(inout), TARGET :: t_node, t_first, t_last
+    class(ListNode), intent(inout), target :: t_node, t_first, t_last
     ! --- Declaration of variables -------------------------------------
-    CLASS(ListNode), POINTER :: tp
+    class(ListNode), pointer :: tp
     ! --- Executable Code ----------------------------------------------
-    IF (.NOT.ASSOCIATED(t_node%tp_prev_%tp_next_,t_last)) THEN
+    if (.not.associated(t_node%tp_prev_%tp_next_,t_last)) then
        ! Remove [t_first,t_last) from its old position
        t_last %tp_prev_%tp_next_ => t_node
        t_first%tp_prev_%tp_next_ => t_last
@@ -122,64 +122,64 @@ CONTAINS
        t_node %tp_prev_ => t_last %tp_prev_
        t_last %tp_prev_ => t_first%tp_prev_
        t_first%tp_prev_ => tp
-    END IF
-  END SUBROUTINE transfer__
+    end if
+  end subroutine transfer__
 
-  SUBROUTINE reverse__(t_node)
+  subroutine reverse__(t_node)
     ! --- Declaration of arguments -------------------------------------
-    CLASS(ListNode), INTENT(inout), TARGET :: t_node
+    class(ListNode), intent(inout), target :: t_node
     ! --- Declaration of variables -------------------------------------
-    CLASS(ListNode), POINTER :: tp_1,tp_2
+    class(ListNode), pointer :: tp_1,tp_2
     ! --- Executable Code ----------------------------------------------
     tp_2 => t_node
-    DO
+    do
        tp_1          => tp_2%tp_next_
        tp_2%tp_next_ => tp_2%tp_prev_
        tp_2%tp_prev_ => tp_1
        tp_2          => tp_2%tp_prev_
-       IF (ASSOCIATED(tp_2,t_node)) EXIT
-    END DO
-  END SUBROUTINE reverse__
+       if (associated(tp_2,t_node)) exit
+    end do
+  end subroutine reverse__
 
-  FUNCTION next__(t_node) RESULT(tp)
+  function next__(t_node) result(tp)
     ! --- Declaration of arguments -------------------------------------
-    CLASS(ListNode), INTENT(inout) :: t_node
-    CLASS(ListNode), POINTER       :: tp
+    class(ListNode), intent(inout) :: t_node
+    class(ListNode), pointer       :: tp
     ! --- Executable Code ----------------------------------------------
     tp => t_node%tp_next_
-  END FUNCTION next__
+  end function next__
 
-  FUNCTION prev__(t_node) RESULT(tp)
+  function prev__(t_node) result(tp)
     ! --- Declaration of arguments -------------------------------------
-    CLASS(ListNode), INTENT(inout) :: t_node
-    CLASS(ListNode), POINTER       :: tp
+    class(ListNode), intent(inout) :: t_node
+    class(ListNode), pointer       :: tp
     ! --- Executable Code ----------------------------------------------
     tp => t_node%tp_prev_
-  END FUNCTION prev__
+  end function prev__
 
-  FUNCTION get__(t_node) RESULT(tp)
+  function get__(t_node) result(tp)
     ! --- Declaration of arguments -------------------------------------
-    CLASS(ListNode), INTENT(inout), TARGET :: t_node
-    CLASS(*)       , POINTER       :: tp
+    class(ListNode), intent(inout), target :: t_node
+    class(*)       , pointer       :: tp
     ! --- Executable Code ----------------------------------------------
     tp => t_node%ta_data_
-  END FUNCTION get__
+  end function get__
 
-  SUBROUTINE set__(t_node,t_value)
+  subroutine set__(t_node,t_value)
     ! --- Declaration of arguments -------------------------------------
-    CLASS(ListNode), INTENT(inout) :: t_node
-    CLASS(*)       , INTENT(in   ) :: t_value
+    class(ListNode), intent(inout) :: t_node
+    class(*)       , intent(in   ) :: t_value
     ! --- Executable Code ----------------------------------------------
-    IF (ALLOCATED(t_node%ta_data_)) DEALLOCATE(t_node%ta_data_)
-    ALLOCATE(t_node%ta_data_,source=t_value)
-  END SUBROUTINE set__
+    if (allocated(t_node%ta_data_)) deallocate(t_node%ta_data_)
+    allocate(t_node%ta_data_,source=t_value)
+  end subroutine set__
 
-  SUBROUTINE final___(t_node)
+  subroutine final___(t_node)
     ! --- Declaration of arguments -------------------------------------
-    TYPE(ListNode), INTENT(inout) :: t_node
+    type(ListNode), intent(inout) :: t_node
     ! --- Executable Code ----------------------------------------------
-    IF (ALLOCATED(t_node%ta_data_)) DEALLOCATE(t_node%ta_data_)
-  END SUBROUTINE final___
+    if (allocated(t_node%ta_data_)) deallocate(t_node%ta_data_)
+  end subroutine final___
 
   
-END MODULE gfcl_list_node
+end module gfcl_list_node

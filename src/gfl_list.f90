@@ -858,14 +858,18 @@ CONTAINS
                               first1%tp_node_%ta_data_ )) THEN
              next = first2
              CALL next%next()
-             CALL splice_range__(first1,first2,next)
+             CALL first1%tp_node_%transfer(first2%tp_node_, &
+                                           next%tp_node_)
+!             CALL splice_range__(first1,first2,next)
              first2 = next
           ELSE
              CALL first1%next()
           END IF
        END DO
        IF (first2 /= last2) THEN
-          CALL splice_range__(last1,first2,last2)
+          CALL last1%tp_node_%transfer(first2%tp_node_, &
+                                       last2%tp_node_ )
+!         CALL splice_range__(last1,first2,last2)
        END IF
     END IF
   END SUBROUTINE merge__

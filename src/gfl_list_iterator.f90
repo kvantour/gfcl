@@ -6,6 +6,7 @@ MODULE gfcl_list_iterator
   IMPLICIT NONE
   !--- Private/public section ----------------------------------------
   PRIVATE
+  PUBLIC :: advance
   PUBLIC :: ListIterator
   !--- Data types ----------------------------------------------------
   ! a list iterator used to tranverse the list and point to objects to

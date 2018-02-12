@@ -19,7 +19,7 @@ program list_splice
   write(*,'(A)',advance='no') "list2:"
   call display_list(list2)
 
-  call list2%splice(list2.begin(),it,list1.end())
+  call list2%splice(list2%begin(),it,list1%end())
   write(*,'(A)',advance='no') "list1:"
   call display_list(list1)
   write(*,'(A)',advance='no') "list2:"

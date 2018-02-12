@@ -11,8 +11,8 @@ module gfcl_iterators
 !     INTEGER, ALLOCATABLE :: ICE_dummy
    contains
      private
-     procedure(op1_fi), deferred, pass, public :: equal_
-     procedure(op1_fi), deferred, pass, public :: notequal_
+     procedure(op1_fi), deferred, pass :: equal_
+     procedure(op1_fi), deferred, pass :: notequal_
      procedure(op2_fi), deferred, pass :: next_
 
      procedure(op3_fi), deferred, pass, public :: get

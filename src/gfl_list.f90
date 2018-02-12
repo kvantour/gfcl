@@ -240,7 +240,7 @@ contains
     class(List)       , intent(in), target :: t_this
     type(ListIterator)                     :: iterator
     ! --- Executable Code ----------------------------------------------
-    iterator = ListIterator(t_this%t_node_%tp_next_)
+    iterator%tp_node_ => t_this%t_node_%tp_next_
   end function begin__
 
   ! list_end
@@ -249,7 +249,7 @@ contains
     class(List)       , intent(in), target :: t_this
     type(ListIterator)                     :: iterator
     ! --- Executable Code ----------------------------------------------
-    iterator = ListIterator(t_this%t_node_)
+    iterator%tp_node_ => t_this%t_node_
   end function end__
 
   !===================================================================
@@ -918,7 +918,6 @@ contains
     do i = 1,64
        call initialise_void__(tmp(i))
     end do
-
     ! Do nothing if the list has length 0 or 1
     if (.not.associated(t_this%t_node_%tp_next_        , &
                         t_this%t_node_%tp_next_%tp_prev_ ) .and. &

@@ -169,60 +169,60 @@ contains
 
   ! initialise_empty__
   ! Constructs an empty container, with no elements.
-  subroutine initialise_void__(t_this)
+  subroutine initialise_void__(this)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout), target :: t_this
+    class(List), intent(inout), target :: this
     ! --- Executable Code ----------------------------------------------
-    if (associated(t_this%t_node_%tp_next_)) call clear__(t_this)
-    t_this%t_node_%tp_next_ => t_this%t_node_
-    t_this%t_node_%tp_prev_ => t_this%t_node_
+    if (associated(this%t_node_%tp_next_)) call clear__(this)
+    this%t_node_%tp_next_ => this%t_node_
+    this%t_node_%tp_prev_ => this%t_node_
   end subroutine initialise_void__
 
   ! initialise_fill__
   ! Constructs a container filled with count values
-  subroutine initialise_fill__(t_this,i_count,t_value)
+  subroutine initialise_fill__(this,count,value)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout) :: t_this
-    integer    , intent(in)    :: i_count
-    class(*)   , intent(in)    :: t_value
+    class(List), intent(inout) :: this
+    integer    , intent(in)    :: count
+    class(*)   , intent(in)    :: value
     ! --- Executable Code ----------------------------------------------
-    call initialise_void__(t_this)
-    call insert_fill__(t_this%end(),i_count,t_value)
+    call initialise_void__(this)
+    call insert_fill__(this%end(),count,value)
   end subroutine initialise_fill__
 
-  subroutine initialise_array__(t_this,td_array)
+  subroutine initialise_array__(this,array)
     ! --- Declaration of arguments -------------------------------------
-    class(List),               intent(inout) :: t_this
-    class(*)   , dimension(:), intent(in)    :: td_array
+    class(List),               intent(inout) :: this
+    class(*)   , dimension(:), intent(in)    :: array
     ! --- Executable Code ----------------------------------------------
-    call initialise_void__(t_this)
-    call insert_array__(t_this%end(),td_array)
+    call initialise_void__(this)
+    call insert_array__(this%end(),array)
   end subroutine initialise_array__
 
   ! list_construct_range
-  subroutine initialise_range__(t_this,t_first,t_last)
+  subroutine initialise_range__(this,first,last)
     ! --- Declaration of arguments -------------------------------------
-    class(List)        , intent(inout) :: t_this
-    type(ListIterator) , intent(in)    :: t_first, t_last
+    class(List)            , intent(inout) :: this
+    class(ForwardIterator) , intent(in)    :: first, last
     ! --- Executable Code ----------------------------------------------
-    call initialise_void__(t_this)
-    call insert_range__(t_this%end(),t_first,t_last)
+    call initialise_void__(this)
+    call insert_range__(this%end(),first,last)
   end subroutine initialise_range__
 
-  subroutine initialise_copy__(t_this,t_that)
+  subroutine initialise_copy__(this,other)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout) :: t_this
-    type(List) , intent(in)    :: t_that
+    class(List), intent(inout) :: this
+    type(List) , intent(in)    :: other
     ! --- Executable Code ----------------------------------------------
-    call initialise_void__(t_this)
-    call insert_range__(t_this%end(),t_that%begin(),t_that%end())
+    call initialise_void__(this)
+    call insert_range__(this%end(),other%begin(),other%end())
   end subroutine initialise_copy__
 
-  subroutine finalise__(t_this)
+  subroutine finalise__(this)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout) :: t_this
+    class(List), intent(inout) :: this
     ! --- Executable Code ----------------------------------------------
-    call clear__(t_this)
+    call clear__(this)
   end subroutine finalise__
 
   !===================================================================
@@ -235,21 +235,21 @@ contains
   !===================================================================
 
   ! list_begin
-  function begin__(t_this) result(iterator)
+  function begin__(this) result(iterator)
     ! --- Declaration of arguments -------------------------------------
-    class(List)       , intent(in), target :: t_this
+    class(List)       , intent(in), target :: this
     type(ListIterator)                     :: iterator
     ! --- Executable Code ----------------------------------------------
-    iterator%tp_node_ => t_this%t_node_%tp_next_
+    iterator%tp_node_ => this%t_node_%tp_next_
   end function begin__
 
   ! list_end
-  function end__(t_this) result(iterator)
+  function end__(this) result(iterator)
     ! --- Declaration of arguments -------------------------------------
-    class(List)       , intent(in), target :: t_this
+    class(List)       , intent(in), target :: this
     type(ListIterator)                     :: iterator
     ! --- Executable Code ----------------------------------------------
-    iterator%tp_node_ => t_this%t_node_
+    iterator%tp_node_ => this%t_node_
   end function end__
 
   !===================================================================
@@ -262,30 +262,31 @@ contains
   !===================================================================
 
   ! Returns the number of elements in the list container.
-  function size__(t_this) result(i_size)
+  function size__(this) result(size)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(in) :: t_this
-    integer                 :: i_size
+    class(List), intent(in) :: this
+    integer                 :: size
     ! --- Declaration of variables -------------------------------------
-    type(ListIterator)      :: t_iterator
+    type(ListIterator)      :: iterator, last
     ! --- Executable Code ----------------------------------------------
-    t_iterator = t_this%begin()
-    i_size = 0
+    iterator = this%begin()
+    last     = this%end()
+    size = 0
 
-    do while (t_iterator /= t_this%end())
-       i_size = i_size + 1
-       call t_iterator%next()
+    do while (iterator /= last)
+       size = size + 1
+       call iterator%next()
     end do
   end function size__
 
   ! Returns whether the list container is empty (i.e. whether its
   ! size is 0).
-  function empty__(t_this) result(b)
+  function empty__(this) result(bool)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(in), target :: t_this
-    logical                         :: b
+    class(List), intent(in), target :: this
+    logical                         :: bool
     ! --- Executable Code ----------------------------------------------
-    b = associated(t_this%t_node_%tp_next_,t_this%t_node_)
+    bool = associated(this%t_node_%tp_next_,this%t_node_)
   end function empty__
 
   !===================================================================
@@ -318,50 +319,50 @@ contains
   ! elements in the range between first and last, in the same
   ! order. First and last could belong to a different list.
 
-  subroutine assign_range__(t_this, t_first2, t_last2)
+  subroutine assign_range__(this, first, last)
     ! --- Declaration of arguments -------------------------------------
-    class(List)       , intent(inout) :: t_this
-    type(ListIterator), value         :: t_first2, t_last2
+    class(List)           , intent(inout) :: this
+    class(ForwardIterator), value         :: first, last
     ! --- Declaration of variables -------------------------------------
-    type(ListIterator)                :: t_first1, t_last1
+    type(ListIterator)                    :: tfirst, tlast
     ! --- Executable Code ----------------------------------------------
-    t_first1 = t_this%begin()
-    t_last1  = t_this%end()
+    tfirst = this%begin()
+    tlast  = this%end()
 
-    do while (t_first1 /= t_last1 .and. t_first2 /= t_last2)
-       call t_first1%set(t_first2%get())
-       call t_first1%next()
-       call t_first2%next()
+    do while (tfirst /= tlast .and. first /= last)
+       call tfirst%set(first%get())
+       call tfirst%next()
+       call first%next()
     end do
-    if (t_first2 == t_last2) then
-       call erase_range__(t_first1,t_last1)
+    if (first == last) then
+       call erase_range__(tfirst,tlast)
     else
-       call insert_range__(t_last1,t_first2, t_last2)
+       call insert_range__(tlast,first,last)
     end if
   end subroutine assign_range__
 
   ! list_assign_fill
   ! the new contents are n elements, each initialized to a copy of
   ! val.
-  subroutine assign_fill__(t_this,i_count,t_value)
+  subroutine assign_fill__(this,count,value)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout) :: t_this
-    integer    , value         :: i_count
-    class(*)   , intent(in)    :: t_value
+    class(List), intent(inout) :: this
+    integer    , value         :: count
+    class(*)   , intent(in)    :: value
     ! --- Declaration of variables -------------------------------------
-    type(ListIterator)         :: t_iterator
+    type(ListIterator)         :: iterator
     ! --- Executable Code ----------------------------------------------
-    t_iterator = t_this%begin()
-
-    do while(t_iterator /= t_this%end() .and. i_count > 0)
-       call t_iterator%set(t_value)
-       call t_iterator%next()
-       i_count = i_count - 1
+    iterator = this%begin()
+    
+    do while(iterator /= this%end() .and. count > 0)
+       call iterator%set(value)
+       call iterator%next()
+       count = count - 1
     end do
-    if (i_count > 0) then
-       call insert_fill__(t_this%end(),i_count,t_value)
+    if (count > 0) then
+       call insert_fill__(this%end(),count,value)
     else
-       call erase_range__(t_iterator,t_this%end())
+       call erase_range__(iterator,this%end())
     end if
   end subroutine assign_fill__
 
@@ -391,12 +392,12 @@ contains
   end subroutine assign_array__
 
 
-  subroutine assign_list__(t_this,t_that)
+  subroutine assign_list__(this,other)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout) :: t_this
-    type(List) , intent(in)    :: t_that
+    class(List), intent(inout) :: this
+    type(List) , intent(in)    :: other
     ! --- Executable Code ----------------------------------------------
-    call assign_range__(t_this,t_that%begin(),t_that%end())
+    call assign_range__(this,other%begin(),other%end())
   end subroutine assign_list__
 
 
@@ -404,16 +405,16 @@ contains
   ! adds single element with value val before pos
   ! input pos :: iterator
   ! input val :: TYPE(value_type)
-  subroutine insert_element__(t_position, t_value)
+  subroutine insert_element__(position, value)
     ! --- Declaration of arguments -------------------------------------
-    type(ListIterator), intent(in) :: t_position
-    class(*)          , intent(in) :: t_value
+    type(ListIterator), intent(in) :: position
+    class(*)          , intent(in) :: value
     ! --- Declaration of variables -------------------------------------
     type(ListNode)    , pointer    :: tp_node
     ! --- Executable Code ----------------------------------------------
     allocate(tp_node)
-    call tp_node%set(t_value)
-    call tp_node%hook(t_position%tp_node_)
+    call tp_node%set(value)
+    call tp_node%hook(position%tp_node_)
   end subroutine insert_element__
 
   ! list_insert_fill
@@ -421,18 +422,18 @@ contains
   ! input pos :: iterator
   ! input n   :: integer
   ! input val :: TYPE(value_type)
-  subroutine insert_fill__(t_position,i_count,t_value)
+  subroutine insert_fill__(position,count,value)
     ! --- Declaration of arguments -------------------------------------
-    type(ListIterator), intent(in) :: t_position
-    integer           , value      :: i_count
-    class(*)          , intent(in) :: t_value
+    type(ListIterator), intent(in) :: position
+    integer           , value      :: count
+    class(*)          , intent(in) :: value
     ! --- Executable Code ----------------------------------------------
     ! we do not need to increment pos as the new element remains
     ! pointing at the same node and all elements are inserted
     ! before that on.
-    do while (i_count > 0)
-       call insert_element__(t_position, t_value)
-       i_count = i_count - 1
+    do while (count > 0)
+       call insert_element__(position, value)
+       count = count - 1
     end do
   end subroutine insert_fill__
 
@@ -472,44 +473,44 @@ contains
   ! list_insert_range
   ! Adds the elements from [first,last) before pos
   ! element last is excluded
-  subroutine insert_range__(t_position, t_first, t_last)
+  subroutine insert_range__(position, first, last)
     ! --- Declaration of arguments -------------------------------------
-    type(ListIterator), intent(in) :: t_position
-    type(ListIterator), value      :: t_first
-    type(ListIterator), intent(in) :: t_last
+    type(ListIterator)    , intent(in) :: position
+    class(ForwardIterator), value      :: first
+    class(ForwardIterator), intent(in) :: last
     ! --- Executable Code ----------------------------------------------
-    do while (t_first /= t_last)
-       call insert_element__(t_position,t_first%get())
-       call t_first%next()
+    do while (first /= last)
+       call insert_element__(position,first%get())
+       call first%next()
     end do
   end subroutine insert_range__
 
   ! list_erase_element
   ! Removes from the list container a single element located at pos.
   ! After the erase is done, pos points to the next element
-  subroutine erase_element__(t_position)
+  subroutine erase_element__(position)
     ! --- Declaration of arguments -------------------------------------
-    type(ListIterator), intent(inout) :: t_position
+    type(ListIterator), intent(inout) :: position
     ! --- Declaration of variables -------------------------------------
-    type(ListIterator)                :: t_tmp
+    type(ListIterator)                :: iterator
     ! --- Executable Code ----------------------------------------------
-    t_tmp = t_position
-    call t_tmp%next()
-    call t_position%tp_node_%unhook()
-    deallocate(t_position%tp_node_)
-    nullify(t_position%tp_node_)
-    t_position = t_tmp
+    iterator = position
+    call iterator%next()
+    call position%tp_node_%unhook()
+    deallocate(position%tp_node_)
+    nullify(position%tp_node_)
+    position = iterator
   end subroutine erase_element__
 
   ! list_erase_range
   ! Removes from the list container all elements between
   ! [first,last), excluding last
-  subroutine erase_range__(t_first,t_last)
+  subroutine erase_range__(first,last)
     ! --- Declaration of arguments -------------------------------------
-    type(ListIterator), value :: t_first, t_last
+    type(ListIterator), value :: first, last
     ! --- Executable Code ----------------------------------------------
-    do while (t_first /= t_last)
-       call erase_element__(t_first)
+    do while (first /= last)
+       call erase_element__(first)
     end do
   end subroutine erase_range__
 
@@ -519,12 +520,12 @@ contains
   ! moved) to the inserted element.
   ! input list  : TYPE(List)
   ! input val   : TYPE(value_type)
-  subroutine push_front__(t_this,t_value)
+  subroutine push_front__(this,value)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout) :: t_this
-    class(*)   , intent(in)    :: t_value
+    class(List), intent(inout) :: this
+    class(*)   , intent(in)    :: value
     ! --- Executable Code ----------------------------------------------
-    call insert_element__(t_this%begin(),t_value)
+    call insert_element__(this%begin(),value)
   end subroutine push_front__
 
   ! list_push_back
@@ -533,41 +534,41 @@ contains
   ! the new element.
   ! input list  : CLASS(List)
   ! input val   : TYPE(value_type)
-  subroutine push_back__(t_this,t_value)
+  subroutine push_back__(this,value)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout) :: t_this
-    class(*)   , intent(in)    :: t_value
+    class(List), intent(inout) :: this
+    class(*)   , intent(in)    :: value
     ! --- Executable Code ----------------------------------------------
-    call insert_element__(t_this%end(),t_value)
+    call insert_element__(this%end(),value)
   end subroutine push_back__
 
   ! list_pop_front
   ! Removes the first element in the list container, effectively
-  ! reducing its size by one. T_this destroys the removed element.
+  ! reducing its size by one. This destroys the removed element.
   ! input list : CLASS(List)
-  subroutine pop_front__(t_this)
+  subroutine pop_front__(this)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout) :: t_this
+    class(List), intent(inout) :: this
     ! --- Declaration of variables -------------------------------------
-    type(ListIterator) :: t_iterator
+    type(ListIterator) :: iterator
     ! --- Executable Code ----------------------------------------------
-    t_iterator = t_this%begin()
-    call erase_element__(t_iterator)
+    iterator = this%begin()
+    call erase_element__(iterator)
   end subroutine pop_front__
 
   ! list_pop_back
   ! Removes the last element in the list container, effectively
   ! reducing its size by one. This destroys the removed element.
   ! input list : CLASS(List)
-  subroutine pop_back__(t_this)
+  subroutine pop_back__(this)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout) :: t_this
+    class(List), intent(inout) :: this
     ! --- Declaration of variables -------------------------------------
-    type(ListIterator) :: t_iterator
+    type(ListIterator) :: iterator
     ! --- Executable Code ----------------------------------------------
-    t_iterator = t_this%end()
-    call t_iterator%prev()
-    call erase_element__(t_iterator)
+    iterator = this%end()
+    call iterator%prev()
+    call erase_element__(iterator)
   end subroutine pop_back__
 
   ! list_clear
@@ -575,11 +576,11 @@ contains
   ! destroyed), and leaving the container with a size of 0.
   ! input list : CLASS(List)
 
-  subroutine clear__(t_this)
+  subroutine clear__(this)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout) :: t_this
+    class(List), intent(inout) :: this
     ! --- Executable Code ----------------------------------------------
-    call erase_range__(t_this%begin(),t_this%end())
+    call erase_range__(this%begin(),this%end())
   end subroutine clear__
 
   ! list_swap
@@ -589,11 +590,11 @@ contains
   ! in x before the call, and the elements of x are those which were
   ! in y. All iterators, references and pointers remain valid for
   ! the swapped objects.
-  subroutine swap__(t_listx, t_listy)
+  subroutine swap__(this, other)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout) :: t_listx, t_listy
+    class(List), intent(inout) :: this, other
     ! --- Executable Code ----------------------------------------------
-    call t_listx%t_node_%swap(t_listy%t_node_)
+    call this%t_node_%swap(other%t_node_)
   end subroutine swap__
 
   ! list_resize
@@ -606,26 +607,26 @@ contains
   ! actual content of the container by inserting or erasing elements
   ! from it.
 
-  subroutine resize__(t_this,i_size,t_value)
+  subroutine resize__(this,count,value)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout) :: t_this
-    integer    , intent(in)    :: i_size
-    class(*)   , intent(in)    :: t_value
+    class(List), intent(inout) :: this
+    integer    , intent(in)    :: count
+    class(*)   , intent(in)    :: value
     ! --- Declaration of variables -------------------------------------
-    type(ListIterator) :: t_iterator
-    integer            :: i_counter
+    type(ListIterator) :: iterator
+    integer            :: counter
     ! --- Executable Code ----------------------------------------------
-    t_iterator = t_this%begin()
-    i_counter  = 0
+    iterator = this%begin()
+    counter  = 0
 
-    do while (t_iterator /= t_this%end() .and. i_counter < i_size)
-       call t_iterator%next()
-       i_counter = i_counter + 1
+    do while (iterator /= this%end() .and. counter < count)
+       call iterator%next()
+       counter = counter + 1
     end do
-    if (i_counter == i_size) then
-       call erase_range__(t_iterator,t_this%end())
+    if (counter == count) then
+       call erase_range__(iterator,this%end())
     else
-       call insert_fill__(t_iterator,i_size - i_counter,t_value)
+       call insert_fill__(iterator,count - counter,value)
     end if
   end subroutine resize__
 
@@ -644,48 +645,48 @@ contains
   ! Insert contents of another list x The elements of x are inserted
   ! in constant time in front of the element referenced by position
   ! pos. x becomes an empty list.
-  subroutine splice_list__(t_position,t_listx)
+  subroutine splice_list__(position,other)
     ! --- Declaration of arguments -------------------------------------
-    type(ListIterator), intent(in)    :: t_position
-    type(List)        , intent(inout) :: t_listx
+    type(ListIterator), intent(in)    :: position
+    type(List)        , intent(inout) :: other
     ! --- Declaration of variables -------------------------------------
     type(ListIterator)                :: first, last
     ! --- Executable Code ----------------------------------------------
-    if ( .not. t_listx%empty() ) then
-       first = t_listx%begin()
-       last  = t_listx%end()
-       call t_position%tp_node_%transfer(first%tp_node_, last%tp_node_)
+    if ( .not. other%empty() ) then
+       first = other%begin()
+       last  = other%end()
+       call position%tp_node_%transfer(first%tp_node_, last%tp_node_)
     end if
   end subroutine splice_list__
 
   ! Insert element from another list. Removes the element in list x
   ! referenced by it and inserts it into the current list before
   ! position pos.
-  subroutine splice_element__(t_position, t_iterator)
+  subroutine splice_element__(position, iterator)
     ! --- Declaration of arguments -------------------------------------
-    type(ListIterator), intent(in) :: t_position
-    type(ListIterator), intent(in) :: t_iterator
+    type(ListIterator), intent(in) :: position
+    type(ListIterator), intent(in) :: iterator
     ! --- Declaration of variables -------------------------------------
-    type(ListIterator) :: t_iterator_next
+    type(ListIterator) :: iterator_next
     ! --- Executable Code ----------------------------------------------
-    t_iterator_next = t_iterator
-    call t_iterator_next%next()
-    if (t_position == t_iterator .or. t_position == t_iterator_next) return
-    call t_position%tp_node_%transfer(t_iterator     %tp_node_, &
-                                      t_iterator_next%tp_node_  )
+    iterator_next = iterator
+    call iterator_next%next()
+    if (position == iterator .or. position == iterator_next) return
+    call position%tp_node_%transfer(iterator     %tp_node_, &
+                                      iterator_next%tp_node_  )
   end subroutine splice_element__
 
 
   ! Insert range from another. Removes elements in the range
   ! [first,last) and inserts them before position in constant time.
   ! Undefined if position pos is in [first,last).
-  subroutine splice_range__(t_position, t_first, t_last)
+  subroutine splice_range__(position, first, last)
     ! --- Declaration of arguments -------------------------------------
-    type(ListIterator), intent(in) :: t_position, t_first, t_last
+    type(ListIterator), intent(in) :: position, first, last
     ! --- Executable Code ----------------------------------------------
-    if (t_first /= t_last) then
-       call t_position%tp_node_%transfer(t_first%tp_node_, &
-                                         t_last %tp_node_  )
+    if (first /= last) then
+       call position%tp_node_%transfer(first%tp_node_, &
+                                         last %tp_node_  )
     end if
   end subroutine splice_range__
 
@@ -694,10 +695,10 @@ contains
   ! function only erases the elements, and that if the elements
   ! themselves are pointers, the pointed-to memory is not touched in
   ! any way.  Managing the pointer is the user's responsibility.
-  subroutine remove_value__(t_this,t_value,BinaryPredicate)
+  subroutine remove_value__(this,value,BinaryPredicate)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout), target :: t_this
-    class(*)   , intent(in)   , target :: t_value
+    class(List), intent(inout), target :: this
+    class(*)   , intent(in)   , target :: value
     interface
        logical function BinaryPredicate(x,y)
          class(*), intent(in) :: x,y
@@ -707,18 +708,18 @@ contains
     class(*) , pointer :: p1,p2
     type(ListIterator) :: first,last,extra,next
     ! --- Executable Code ----------------------------------------------
-    first = t_this%begin()
-    last  = t_this%end()
+    first = this%begin()
+    last  = this%end()
     extra = last
     
     do while (first /= last)
        next = first
        call next%next()
 
-       if (BinaryPredicate(first%tp_node_%ta_data_,t_value)) then
+       if (BinaryPredicate(first%tp_node_%ta_data_,value)) then
           ! We do this in case we passed a pointer of a listvalue to
-          ! the t_value argument
-          p1 => t_value
+          ! the value argument
+          p1 => value
           p2 => first%tp_node_%ta_data_
           if (associated(p1,p2)) then
              extra = first
@@ -739,9 +740,9 @@ contains
   ! the elements themselves are pointers, the pointed-to memory is
   ! not touched in any way.  Managing the pointer is the user's
   ! responsibility.
-  subroutine remove_if__(t_this,UnaryPredicate)
+  subroutine remove_if__(this,UnaryPredicate)
   ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout), target :: t_this
+    class(List), intent(inout), target :: this
     interface
        logical function UnaryPredicate(x)
          class(*), intent(in) :: x
@@ -750,8 +751,8 @@ contains
     ! --- Declaration of variables -------------------------------------
     type(ListIterator) :: first,last,next
     ! --- Executable Code ----------------------------------------------
-    first = t_this%begin()
-    last  = t_this%end()
+    first = this%begin()
+    last  = this%end()
     
     do while (first /= last)
        next = first
@@ -769,14 +770,14 @@ contains
   ! the elements themselves are pointers, the pointed-to memory is
   ! not touched in any way.  Managing the pointer is the user's
   ! responsibility.
-  subroutine remove_unallocated__(t_this)
+  subroutine remove_unallocated__(this)
   ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout), target :: t_this
+    class(List), intent(inout), target :: this
     ! --- Declaration of variables -------------------------------------
     type(ListIterator) :: first,last,next
     ! --- Executable Code ----------------------------------------------
-    first = t_this%begin()
-    last  = t_this%end()
+    first = this%begin()
+    last  = this%end()
 
     do while (first /= last)
        next = first
@@ -795,9 +796,9 @@ contains
   ! this function only erases the elements, and that if the elements
   ! themselves are pointers, the pointed-to memory is not touched in
   ! any way. Managing the pointer is the user's responsibility.
-  subroutine unique__(t_this,BinaryPredicate)
+  subroutine unique__(this,BinaryPredicate)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout) :: t_this
+    class(List), intent(inout) :: this
     interface
        logical function BinaryPredicate(x,y)
          class(*), intent(in) :: x,y
@@ -806,8 +807,8 @@ contains
     ! --- Declaration of variables -------------------------------------
     type(ListIterator) :: first, last, next
     ! --- Executable Code ----------------------------------------------
-    first = t_this%begin()
-    last  = t_this%end()
+    first = this%begin()
+    last  = this%end()
     if (first /= last) then
        next = first
        call next%next()
@@ -833,9 +834,9 @@ contains
   ! performed without constructing nor destroying any element: they
   ! are transferred.
 
-  subroutine merge__(t_this, t_that, BinaryPredicate)
+  subroutine merge__(this, other, BinaryPredicate)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout) :: t_this, t_that
+    class(List), intent(inout) :: this, other
     interface
        logical function BinaryPredicate(x,y)
          class(*), intent(in) :: x,y
@@ -846,12 +847,12 @@ contains
     type(ListIterator) :: first2, last2
     type(ListIterator) :: next
     ! --- Executable Code ----------------------------------------------
-    if (.not.associated(t_this%t_node_%tp_next_%tp_prev_, &
-                        t_that%t_node_%tp_next_%tp_prev_)) then
-       first1 = t_this%begin()
-       last1  = t_this%end()
-       first2 = t_that%begin()
-       last2  = t_that%end()
+    if (.not.associated(this%t_node_%tp_next_%tp_prev_, &
+                        other%t_node_%tp_next_%tp_prev_)) then
+       first1 = this%begin()
+       last1  = this%end()
+       first2 = other%begin()
+       last2  = other%end()
 
        do while (first1 /= last1 .and. first2 /= last2)
           if (BinaryPredicate(first2%tp_node_%ta_data_,&
@@ -875,11 +876,11 @@ contains
   end subroutine merge__
   
   ! Reverse the order of the list this
-  subroutine reverse__(t_this)
+  subroutine reverse__(this)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout) :: t_this
+    class(List), intent(inout) :: this
     ! --- Executable Code ----------------------------------------------
-    call t_this%t_node_%reverse()
+    call this%t_node_%reverse()
   end subroutine reverse__
 
 
@@ -901,9 +902,9 @@ contains
   !
   ! Sorts the elements of this list in NlogN time.
   ! Algorithm : n-way merge sort
-  subroutine sort__(t_this,BinaryPredicate)
+  subroutine sort__(this,BinaryPredicate)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout) :: t_this
+    class(List), intent(inout) :: this
     interface
        logical function BinaryPredicate(x,y)
          class(*), intent(in) :: x,y
@@ -919,14 +920,14 @@ contains
        call initialise_void__(tmp(i))
     end do
     ! Do nothing if the list has length 0 or 1
-    if (.not.associated(t_this%t_node_%tp_next_        , &
-                        t_this%t_node_%tp_next_%tp_prev_ ) .and. &
+    if (.not.associated(this%t_node_%tp_next_        , &
+                        this%t_node_%tp_next_%tp_prev_ ) .and. &
 
-         .not.associated(t_this%t_node_%tp_next_%tp_next_, &
-                         t_this%t_node_%tp_next_%tp_prev_  )       ) then
+         .not.associated(this%t_node_%tp_next_%tp_next_, &
+                         this%t_node_%tp_next_%tp_prev_  )       ) then
        fill = 1
        do
-          call splice_element__(carry%begin(),t_this%begin())
+          call splice_element__(carry%begin(),this%begin())
           counter = 1
           do while (counter /= fill .and. &
                .not. tmp(counter)%empty() )
@@ -936,7 +937,7 @@ contains
           end do
           call swap__(carry,tmp(counter))
           if (counter == fill) fill = fill + 1
-          if (t_this%empty()) exit
+          if (this%empty()) exit
        end do
        counter = 2
        do while (counter  /= fill)
@@ -944,7 +945,7 @@ contains
           counter = counter + 1
        end do
 
-       call swap__(t_this,tmp(fill-1))
+       call swap__(this,tmp(fill-1))
 
     end if
   end subroutine sort__

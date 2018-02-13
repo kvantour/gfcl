@@ -8,6 +8,8 @@ module gfcl_list_iterator
   private
   public :: advance
   public :: ListIterator
+  public :: ForwardIterator
+  public :: BidirectionalIterator
   !--- Data types ----------------------------------------------------
   ! a list iterator used to tranverse the list and point to objects to
   ! insert or delete.

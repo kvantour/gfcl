@@ -150,6 +150,8 @@ module gfcl_list
      procedure, public :: merge          => merge__
      procedure, public :: reverse        => reverse__
      procedure, public :: sort           => sort__
+
+     final :: finalise__
   end type List
 
   !--- Interfaces ----------------------------------------------------
@@ -220,7 +222,7 @@ contains
 
   subroutine finalise__(this)
     ! --- Declaration of arguments -------------------------------------
-    class(List), intent(inout) :: this
+    type(List), intent(inout) :: this
     ! --- Executable Code ----------------------------------------------
     call clear__(this)
   end subroutine finalise__

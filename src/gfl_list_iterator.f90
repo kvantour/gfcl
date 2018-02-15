@@ -46,133 +46,133 @@ module gfcl_list_iterator
 contains
 
   ! creates an empty iterator
-  subroutine initialise_void__(t_this)
+  subroutine initialise_void__(this)
     ! --- Declaration of arguments -------------------------------------
-    class(ListIterator), intent(inout) :: t_this
+    class(ListIterator), intent(inout) :: this
     ! --- Executable Code ----------------------------------------------
-    nullify(t_this%tp_node_)
+    nullify(this%tp_node_)
   end subroutine initialise_void__
 
   ! creates a copy from an iterator
-  subroutine initialise_copy__(t_this,t_that)
+  subroutine initialise_copy__(this,other)
     ! --- Declaration of arguments -------------------------------------
-    class(ListIterator), intent(inout)         :: t_this
-    class(ListIterator), intent(in)   , target :: t_that
+    class(ListIterator), intent(inout)         :: this
+    class(ListIterator), intent(in)   , target :: other
     ! --- Executable Code ----------------------------------------------
-    t_this%tp_node_ => t_that%tp_node_
+    this%tp_node_ => other%tp_node_
   end subroutine initialise_copy__
 
-  subroutine final__(t_this)
+  subroutine final__(this)
     ! --- Declaration of arguments -------------------------------------
-    class(ListIterator), intent(inout) :: t_this
+    class(ListIterator), intent(inout) :: this
     ! --- Executable Code ----------------------------------------------
-    nullify(t_this%tp_node_)
+    nullify(this%tp_node_)
   end subroutine final__
 
   ! next
-  subroutine next__(t_this)
+  subroutine next__(this)
     ! --- Declaration of arguments -------------------------------------
-    class(ListIterator), intent(inout) :: t_this
+    class(ListIterator), intent(inout) :: this
     ! --- Executable Code ----------------------------------------------
-    t_this%tp_node_ => t_this%tp_node_%tp_next_
+    this%tp_node_ => this%tp_node_%tp_next_
   end subroutine next__
 
   ! dec
-  subroutine prev__(t_this)
+  subroutine prev__(this)
     ! --- Declaration of arguments -------------------------------------
     ! decrements the iterator it and returns it
-    class(ListIterator), intent(inout) :: t_this
+    class(ListIterator), intent(inout) :: this
     ! --- Executable Code ----------------------------------------------
-    t_this%tp_node_ => t_this%tp_node_%tp_prev_
+    this%tp_node_ => this%tp_node_%tp_prev_
   end subroutine prev__
 
   ! eq
-  function equal__(t_this,t_that) result(b)
+  function equal__(this,other) result(b)
     ! --- Declaration of arguments -------------------------------------
     ! returns true if it1 and it2 point to the same node
-    class(ListIterator)   , intent(in) :: t_this
-    class(ForwardIterator), intent(in) :: t_that
+    class(ListIterator)   , intent(in) :: this
+    class(ForwardIterator), intent(in) :: other
     logical                            :: b
     ! --- Executable Code ----------------------------------------------
-    select type (t_that)
+    select type (other)
     type is (ListIterator)
-       b = associated(t_this%tp_node_,t_that%tp_node_)
+       b = associated(this%tp_node_,other%tp_node_)
     class default
        b = .false.
     end select
   end function equal__
 
   ! neq
-  function notequal__(t_this,t_that) result(b)
+  function notequal__(this,other) result(b)
     ! --- Declaration of arguments -------------------------------------
     ! returns true if it1 and it2 point to the same node
-    class(ListIterator)   , intent(in) :: t_this
-    class(ForwardIterator), intent(in) :: t_that
+    class(ListIterator)   , intent(in) :: this
+    class(ForwardIterator), intent(in) :: other
     logical                            :: b
     ! --- Executable Code ----------------------------------------------
-    select type (t_that)
+    select type (other)
     type IS (ListIterator)
-       b = .not.associated(t_this%tp_node_,t_that%tp_node_)
+       b = .not.associated(this%tp_node_,other%tp_node_)
     class default
        b = .true.
     end select
   end function notequal__
 
   ! assign
-  subroutine assign(t_this,t_that)
+  subroutine assign(this,other)
     ! --- Declaration of arguments -------------------------------------
-    ! make t_this and t_that equal iterators
-    type(ListIterator), intent(out) :: t_this
-    type(ListIterator), intent(in)  :: t_that
+    ! make this and other equal iterators
+    type(ListIterator), intent(out) :: this
+    type(ListIterator), intent(in)  :: other
     ! --- Executable Code ----------------------------------------------
-    t_this%tp_node_ => t_that%tp_node_
+    this%tp_node_ => other%tp_node_
   end subroutine assign
 
   ! assign_node
-  subroutine assign_node(t_this,t_node)
+  subroutine assign_node(this,node)
     ! --- Declaration of arguments -------------------------------------
-    type(ListIterator), intent(out)        :: t_this
-    type(ListNode)    , intent(in), target :: t_node
+    type(ListIterator), intent(out)        :: this
+    type(ListNode)    , intent(in), target :: node
     ! --- Executable Code ----------------------------------------------
-    t_this%tp_node_ => t_node
+    this%tp_node_ => node
   end subroutine assign_node
 
   ! get_at
-  function get__(t_this) result(tp_value)
+  function get__(this) result(value)
     ! --- Declaration of arguments -------------------------------------
-    class(ListIterator), intent(in) :: t_this
-    class(*)           , pointer    :: tp_value
+    class(ListIterator), intent(in) :: this
+    class(*)           , pointer    :: value
     ! --- Executable Code ----------------------------------------------
-    tp_value => t_this%tp_node_%ta_data_
+    value => this%tp_node_%ta_data_
   end function get__
 
   ! set_at
-  subroutine set__(t_this,t_value)
+  subroutine set__(this,value)
     ! --- Declaration of arguments -------------------------------------
-    class(ListIterator), intent(inout) :: t_this
-    class(*)           , intent(in)    :: t_value
+    class(ListIterator), intent(inout) :: this
+    class(*)           , intent(in)    :: value
     ! --- Executable Code ----------------------------------------------
-    call t_this%tp_node_%set(t_value)
+    call this%tp_node_%set(value)
   end subroutine set__
 
   ! transfer
-  subroutine transfer(t_this,t_first,t_last)
+  subroutine transfer(this,first,last)
     ! --- Declaration of arguments -------------------------------------
-    type(ListIterator), intent(inout) :: t_this,t_first,t_last
+    type(ListIterator), intent(inout) :: this,first,last
     ! --- Executable Code ----------------------------------------------
-    call t_this%tp_node_%transfer(t_first%tp_node_,t_last%tp_node_)
+    call this%tp_node_%transfer(first%tp_node_,last%tp_node_)
   end subroutine transfer
   
   ! distance
-  function distance(t_first,t_last) result(n)
+  function distance(first,last) result(n)
     ! --- Declaration of arguments -------------------------------------
-    type(ListIterator), value :: t_first,t_last
+    type(ListIterator), value :: first,last
     integer                   :: n
     ! --- Executable Code ----------------------------------------------
     n = 0
-    do while (t_first /= t_last)
+    do while (first /= last)
        n = n + 1
-       call t_first%next()
+       call first%next()
     end do
   end function distance
 

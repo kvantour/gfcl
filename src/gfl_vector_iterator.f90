@@ -33,8 +33,10 @@ module gfcl_list_iterator
      procedure :: notequal_ => notequal__
 
      ! modifiers =======================================================
-     procedure :: next_     => next__
-     procedure :: prev_     => prev__
+     procedure :: next_              => next__
+     procedure :: prev_              => prev__
+     procedure :: add_interger_      => add_integer__
+     procedure :: subtract_interger_ => subtract_integer__
 
      procedure, public :: get     => get__
      procedure, public :: set     => set__
@@ -119,23 +121,488 @@ contains
     end select
   end function notequal__
 
-  subroutine add_integer_(this,n)
+  subroutine add_integer__(this,n)
     ! --- Declaration of arguments -------------------------------------
     ! returns true if it1 and it2 point to the same node
     class(VectorIterator) , intent(inout) :: this
     integer                               :: n
     ! --- Executable Code ----------------------------------------------
     this%i_index_ = this%i_index_ + n
-  end function notequal__
-
-  subroutine subtract_integer_(this,n)
+  end subroutine add_integer__
+  
+  subroutine subtract_integer__(this,n)
     ! --- Declaration of arguments -------------------------------------
     ! returns true if it1 and it2 point to the same node
     class(VectorIterator) , intent(inout) :: this
     integer                               :: n
     ! --- Executable Code ----------------------------------------------
     this%i_index_ = this%i_index_ - n
+  end subroutine subtract_integer__
+
+
+end module gfcl_list_iterator
+
+  subroutine initialise_void__(this)
+    ! --- Declaration of arguments -------------------------------------
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    nullify(this%pd_pointer_)
+    i_index_ = 0
+  end subroutine initialise_void__
+
+  ! creates a copy from an iterator
+  subroutine initialise_copy__(this,other)
+    ! --- Declaration of arguments -------------------------------------
+    class(ListIterator), intent(inout)         :: this
+    class(ListIterator), intent(in)   , target :: other
+    ! --- Executable Code ----------------------------------------------
+    this%pd_pointer_ => other%pd_pointer_
+    this%i_index_    =  other%i_index_
+  end subroutine initialise_copy__
+
+  subroutine finalise__(this)
+    ! --- Declaration of arguments -------------------------------------
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    nullify(this%pd_pointer_)
+  end subroutine finalise__
+
+  ! next
+  subroutine next__(this)
+    ! --- Declaration of arguments -------------------------------------
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_+1
+  end subroutine next__
+
+  ! dec
+  subroutine prev__(this)
+    ! --- Declaration of arguments -------------------------------------
+    ! decrements the iterator it and returns it
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_-1
+  end subroutine prev__
+
+
+  function equal__(this,other) result(b)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(ListIterator)   , intent(in) :: this
+    class(ForwardIterator), intent(in) :: other
+    logical                            :: b
+    ! --- Executable Code ----------------------------------------------
+    select type (other)
+    type is (ListIterator)
+       b = associated(this%pd_pointer_,other%pd_pointer_)
+       b = this%i_index_ == other%i_index_ .and. b
+    class default
+       b = .false.
+    end select
+  end function equal__
+
+  ! neq
+  function notequal__(this,other) result(b)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(ListIterator)   , intent(in) :: this
+    class(ForwardIterator), intent(in) :: other
+    logical                            :: b
+    ! --- Executable Code ----------------------------------------------
+    select type (other)
+    type is (ListIterator)
+       b = .not.associated(this%pd_pointer_,other%pd_pointer_)
+       b = this%i_index_/= other%i_index_ .and. b
+    class default
+       b = .true.
+    end select
   end function notequal__
+
+  subroutine add_integer__(this,n)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(VectorIterator) , intent(inout) :: this
+    integer                               :: n
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_ + n
+  end subroutine add_integer__
+  
+  subroutine subtract_integer__(this,n)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(VectorIterator) , intent(inout) :: this
+    integer                               :: n
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_ - n
+  end subroutine subtract_integer__
+
+
+end module gfcl_list_iterator
+
+  subroutine initialise_void__(this)
+    ! --- Declaration of arguments -------------------------------------
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    nullify(this%pd_pointer_)
+    i_index_ = 0
+  end subroutine initialise_void__
+
+  ! creates a copy from an iterator
+  subroutine initialise_copy__(this,other)
+    ! --- Declaration of arguments -------------------------------------
+    class(ListIterator), intent(inout)         :: this
+    class(ListIterator), intent(in)   , target :: other
+    ! --- Executable Code ----------------------------------------------
+    this%pd_pointer_ => other%pd_pointer_
+    this%i_index_    =  other%i_index_
+  end subroutine initialise_copy__
+
+  subroutine finalise__(this)
+    ! --- Declaration of arguments -------------------------------------
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    nullify(this%pd_pointer_)
+  end subroutine finalise__
+
+  ! next
+  subroutine next__(this)
+    ! --- Declaration of arguments -------------------------------------
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_+1
+  end subroutine next__
+
+  ! dec
+  subroutine prev__(this)
+    ! --- Declaration of arguments -------------------------------------
+    ! decrements the iterator it and returns it
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_-1
+  end subroutine prev__
+
+
+  function equal__(this,other) result(b)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(ListIterator)   , intent(in) :: this
+    class(ForwardIterator), intent(in) :: other
+    logical                            :: b
+    ! --- Executable Code ----------------------------------------------
+    select type (other)
+    type is (ListIterator)
+       b = associated(this%pd_pointer_,other%pd_pointer_)
+       b = this%i_index_ == other%i_index_ .and. b
+    class default
+       b = .false.
+    end select
+  end function equal__
+
+  ! neq
+  function notequal__(this,other) result(b)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(ListIterator)   , intent(in) :: this
+    class(ForwardIterator), intent(in) :: other
+    logical                            :: b
+    ! --- Executable Code ----------------------------------------------
+    select type (other)
+    type is (ListIterator)
+       b = .not.associated(this%pd_pointer_,other%pd_pointer_)
+       b = this%i_index_/= other%i_index_ .and. b
+    class default
+       b = .true.
+    end select
+  end function notequal__
+
+  subroutine add_integer__(this,n)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(VectorIterator) , intent(inout) :: this
+    integer                               :: n
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_ + n
+  end subroutine add_integer__
+  
+  subroutine subtract_integer__(this,n)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(VectorIterator) , intent(inout) :: this
+    integer                               :: n
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_ - n
+  end subroutine subtract_integer__
+
+
+end module gfcl_list_iterator
+
+  subroutine initialise_void__(this)
+    ! --- Declaration of arguments -------------------------------------
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    nullify(this%pd_pointer_)
+    i_index_ = 0
+  end subroutine initialise_void__
+
+  ! creates a copy from an iterator
+  subroutine initialise_copy__(this,other)
+    ! --- Declaration of arguments -------------------------------------
+    class(ListIterator), intent(inout)         :: this
+    class(ListIterator), intent(in)   , target :: other
+    ! --- Executable Code ----------------------------------------------
+    this%pd_pointer_ => other%pd_pointer_
+    this%i_index_    =  other%i_index_
+  end subroutine initialise_copy__
+
+  subroutine finalise__(this)
+    ! --- Declaration of arguments -------------------------------------
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    nullify(this%pd_pointer_)
+  end subroutine finalise__
+
+  ! next
+  subroutine next__(this)
+    ! --- Declaration of arguments -------------------------------------
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_+1
+  end subroutine next__
+
+  ! dec
+  subroutine prev__(this)
+    ! --- Declaration of arguments -------------------------------------
+    ! decrements the iterator it and returns it
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_-1
+  end subroutine prev__
+
+
+  function equal__(this,other) result(b)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(ListIterator)   , intent(in) :: this
+    class(ForwardIterator), intent(in) :: other
+    logical                            :: b
+    ! --- Executable Code ----------------------------------------------
+    select type (other)
+    type is (ListIterator)
+       b = associated(this%pd_pointer_,other%pd_pointer_)
+       b = this%i_index_ == other%i_index_ .and. b
+    class default
+       b = .false.
+    end select
+  end function equal__
+
+  ! neq
+  function notequal__(this,other) result(b)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(ListIterator)   , intent(in) :: this
+    class(ForwardIterator), intent(in) :: other
+    logical                            :: b
+    ! --- Executable Code ----------------------------------------------
+    select type (other)
+    type is (ListIterator)
+       b = .not.associated(this%pd_pointer_,other%pd_pointer_)
+       b = this%i_index_/= other%i_index_ .and. b
+    class default
+       b = .true.
+    end select
+  end function notequal__
+
+  subroutine add_integer__(this,n)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(VectorIterator) , intent(inout) :: this
+    integer                               :: n
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_ + n
+  end subroutine add_integer__
+  
+  subroutine subtract_integer__(this,n)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(VectorIterator) , intent(inout) :: this
+    integer                               :: n
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_ - n
+  end subroutine subtract_integer__
+
+
+end module gfcl_list_iterator
+--------------
+    nullify(this%pd_pointer_)
+  end subroutine finalise__
+
+  ! next
+  subroutine next__(this)
+    ! --- Declaration of arguments -------------------------------------
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_+1
+  end subroutine next__
+
+  ! dec
+  subroutine prev__(this)
+    ! --- Declaration of arguments -------------------------------------
+    ! decrements the iterator it and returns it
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_-1
+  end subroutine prev__
+
+
+  function equal__(this,other) result(b)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(ListIterator)   , intent(in) :: this
+    class(ForwardIterator), intent(in) :: other
+    logical                            :: b
+    ! --- Executable Code ----------------------------------------------
+    select type (other)
+    type is (ListIterator)
+       b = associated(this%pd_pointer_,other%pd_pointer_)
+       b = this%i_index_ == other%i_index_ .and. b
+    class default
+       b = .false.
+    end select
+  end function equal__
+
+  ! neq
+  function notequal__(this,other) result(b)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(ListIterator)   , intent(in) :: this
+    class(ForwardIterator), intent(in) :: other
+    logical                            :: b
+    ! --- Executable Code ----------------------------------------------
+    select type (other)
+    type is (ListIterator)
+       b = .not.associated(this%pd_pointer_,other%pd_pointer_)
+       b = this%i_index_/= other%i_index_ .and. b
+    class default
+       b = .true.
+    end select
+  end function notequal__
+
+  subroutine add_integer__(this,n)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(VectorIterator) , intent(inout) :: this
+    integer                               :: n
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_ + n
+  end subroutine add_integer__
+  
+  subroutine subtract_integer__(this,n)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(VectorIterator) , intent(inout) :: this
+    integer                               :: n
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_ - n
+  end subroutine subtract_integer__
+
+
+end module gfcl_list_iterator
+
+  subroutine initialise_void__(this)
+    ! --- Declaration of arguments -------------------------------------
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    nullify(this%pd_pointer_)
+    i_index_ = 0
+  end subroutine initialise_void__
+
+  ! creates a copy from an iterator
+  subroutine initialise_copy__(this,other)
+    ! --- Declaration of arguments -------------------------------------
+    class(ListIterator), intent(inout)         :: this
+    class(ListIterator), intent(in)   , target :: other
+    ! --- Executable Code ----------------------------------------------
+    this%pd_pointer_ => other%pd_pointer_
+    this%i_index_    =  other%i_index_
+  end subroutine initialise_copy__
+
+  subroutine finalise__(this)
+    ! --- Declaration of arguments -------------------------------------
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    nullify(this%pd_pointer_)
+  end subroutine finalise__
+
+  ! next
+  subroutine next__(this)
+    ! --- Declaration of arguments -------------------------------------
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_+1
+  end subroutine next__
+
+  ! dec
+  subroutine prev__(this)
+    ! --- Declaration of arguments -------------------------------------
+    ! decrements the iterator it and returns it
+    class(ListIterator), intent(inout) :: this
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_-1
+  end subroutine prev__
+
+
+  function equal__(this,other) result(b)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(ListIterator)   , intent(in) :: this
+    class(ForwardIterator), intent(in) :: other
+    logical                            :: b
+    ! --- Executable Code ----------------------------------------------
+    select type (other)
+    type is (ListIterator)
+       b = associated(this%pd_pointer_,other%pd_pointer_)
+       b = this%i_index_ == other%i_index_ .and. b
+    class default
+       b = .false.
+    end select
+  end function equal__
+
+  ! neq
+  function notequal__(this,other) result(b)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(ListIterator)   , intent(in) :: this
+    class(ForwardIterator), intent(in) :: other
+    logical                            :: b
+    ! --- Executable Code ----------------------------------------------
+    select type (other)
+    type is (ListIterator)
+       b = .not.associated(this%pd_pointer_,other%pd_pointer_)
+       b = this%i_index_/= other%i_index_ .and. b
+    class default
+       b = .true.
+    end select
+  end function notequal__
+
+  subroutine add_integer__(this,n)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(VectorIterator) , intent(inout) :: this
+    integer                               :: n
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_ + n
+  end subroutine add_integer__
+  
+  subroutine subtract_integer__(this,n)
+    ! --- Declaration of arguments -------------------------------------
+    ! returns true if it1 and it2 point to the same node
+    class(VectorIterator) , intent(inout) :: this
+    integer                               :: n
+    ! --- Executable Code ----------------------------------------------
+    this%i_index_ = this%i_index_ - n
+  end subroutine subtract_integer__
 
 
 end module gfcl_list_iterator
